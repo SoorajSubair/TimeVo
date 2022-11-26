@@ -1,0 +1,150 @@
+{% extends 'user_base.html' %}
+{% load static %}
+{% block content %}
+<!-- ...:::: Start Breadcrumb Section:::... -->
+<div class="breadcrumb-section breadcrumb-bg-color--golden">
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="breadcrumb-title">Cart</h3>
+                    <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                        <nav aria-label="breadcrumb">
+                            <ul>
+                                <li><a href="{% url 'user_home' %}">Home</a></li>
+                                <li class="active" aria-current="page">Cart</li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!-- ...:::: End Breadcrumb Section:::... -->
+{% if order.get_cart_items <= 0 %}
+<div class="empty-cart-section section-fluid">
+    <div class="emptycart-wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-md-10 offset-md-1 col-xl-6 offset-xl-3">
+                    <div class="emptycart-content text-center">
+                        <div class="image">
+                            <img class="img-fluid" src="{% static 'user_home/assets/images/emprt-cart/empty-cart.png' %}" alt="">
+                        </div>
+                        <h4 class="title">Your Cart is Empty</h4>
+                        <h6 class="sub-title">Sorry Mate... No item Found inside your cart!</h6>
+                        <a href="{% url 'user_home' %}" class="btn btn-lg btn-golden">Continue Shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- ...:::: Start Cart Section:::... -->
+<div class="cart-section">
+    <!-- Start Cart Table -->
+    <div class="cart-table-wrapper" data-aos="fade-up" data-aos-delay="0">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table_desc">
+                        <div class="table_page table-responsive">
+                            <table>
+                                <!-- Start Cart Table Head -->
+                                <thead>
+                                    <tr>
+                                        <th class="product_remove">Delete</th>
+                                        <th class="product_thumb">Image</th>
+                                        <th class="product_name">Product</th>
+                                        <th class="product-price">Price</th>
+                                        <th class="product_quantity">Quantity</th>
+                                        <th class="product_total">Total</th>
+                                    </tr>
+                                </thead> <!-- End Cart Table Head -->
+                                <tbody>
+                                    <!-- Start Cart Single Item-->
+                                    {% for item in items %}
+                                    <tr>
+                                        <td class="product_remove"><a href="#"><i class="fa fa-trash-o"></i></a>
+                                        </td>
+                                        <td class="product_thumb"><a href="#"><img
+                                                    src="{{ item.product.imageURL }}"
+                                                    alt=""></a></td>
+                                        <td class="product_name"><a href="#">{{ item.product.name }}</a></td>
+                                        <td class="product-price">${{ item.product.price|floatformat:2 }}</td>
+                                        <td class="product_quantity">
+                                            <div class="row">
+                                            <div class="col-7" style="display: inline; text-align: end; padding-right: 0px;"><label>Quantity</label><span style="margin-left: 3px;">x</span>
+                                                <span style="font-weight: bold; font-size: 18px;">{{ item.quantity }}</span>
+                                            </div>
+                                            <div class="col-5" style="display: inline; text-align: start; ">
+                                                <img data-product={{item.product.id}} data-action="add" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-up.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                                <img data-product={{item.product.id}} data-action="remove" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-down.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                            </div>
+                                        </div>
+                                        </td>
+                                        <td class="product_total">${{ item.get_total|floatformat:2 }}</td>
+                                    </tr> 
+                                    {% endfor %}
+                                    <!-- End Cart Single Item-->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- <div class="cart_submit">
+                            <button class="btn btn-md btn-golden" type="submit">update cart</button>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- End Cart Table -->
+
+    <!-- Start Coupon Start -->
+    <div class="coupon_area">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-6">
+                    <div class="coupon_code left" data-aos="fade-up" data-aos-delay="200">
+                        <h3>Coupon</h3>
+                        <div class="coupon_inner">
+                            <p>Enter your coupon code if you have one.</p>
+                            <input class="mb-2" placeholder="Coupon code" type="text">
+                            <button type="submit" class="btn btn-md btn-golden">Apply coupon</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6">
+                    <div class="coupon_code right" data-aos="fade-up" data-aos-delay="400">
+                        <h3>Cart Totals</h3>
+                        <div class="coupon_inner">
+                            <div class="cart_subtotal">
+                                <p>Total Items</p>
+                                <p class="cart_amount">{{ order.get_cart_items }}</p>
+                            </div>
+                            <div class="cart_subtotal">
+                                <p>Subtotal</p>
+                                <p class="cart_amount">${{ order.get_cart_total|floatformat:2 }}</p>
+                            </div>
+                            <!-- <div class="cart_subtotal ">
+                                <p>Shipping</p>
+                                <p class="cart_amount"><span>Flat Rate:</span> $255.00</p>
+                            </div>
+                            <a href="#">Calculate shipping</a> -->
+                            <hr>
+                            <div class="cart_subtotal">
+                                <p>Total</p>
+                                <p class="cart_amount">${{ order.get_cart_total|floatformat:2 }}</p>
+                            </div>
+                            <div class="checkout_btn">
+                                <a href="{% url 'checkout' %}" class="btn btn-md btn-golden">Proceed to Checkout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- End Coupon Start -->
+</div> <!-- ...:::: End Cart Section:::... -->
+{% endif %}
+{% endblock content %}

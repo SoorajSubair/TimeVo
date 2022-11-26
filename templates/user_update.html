@@ -1,0 +1,66 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+<div class="col-12 grid-margin">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Update User</h4>
+        <form class="form-sample" action="{% url 'update' user.id %}" method="post">
+            <input type="hidden" name="id" id="id" value="{{ user.id }}">
+            {% csrf_token %}
+          <p class="card-description"> User Details </p>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group row">
+                <label class="col-sm-3 col-form-label">First Name</label>
+                <div class="col-sm-9">
+                  <input type="text" name ="fname" value="{{ user.first_name }}" class="form-control form-control-lg" required>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Last Name</label>
+                <div class="col-sm-9">
+                    <input type="text" name ="lname" value="{{ user.last_name }}" class="form-control form-control-lg" required>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Username</label>
+                <div class="col-sm-9">
+                    <input type="text" name ="reg_username" value="{{ user.username }}" class="form-control form-control-lg" required>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Email</label>
+                <div class="col-sm-9">
+                    <input type="text" name ="reg_email" value="{{ user.email }}" class="form-control form-control-lg" required>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Phone</label>
+                <div class="col-sm-9">
+                    <input type="text" name ="phone" value="{{ user.phone }}" class="form-control form-control-lg" required>
+                </div>
+              </div>
+            </div>
+          </div>
+         <button type="submit" class="btn btn-primary mr-2">Update</button>
+         <a href="{% url 'user_manage' %}" class="btn btn-dark">Cancel</a>
+        </form>
+      </div>
+    </div>
+</div>
+</div>
+{% endblock %}

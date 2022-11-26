@@ -1,0 +1,58 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+<div class="col-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Create Product</h4>
+        <form class="forms-sample" method="post" enctype="multipart/form-data" action="{% url 'product_create' %}">
+            {% csrf_token %}
+          <div class="form-group">
+            <label for="exampleInputName1">Name</label>
+            <input type="text" name= "name" class="form-control" id="exampleInputName1"  required>
+          </div>
+          <div class="form-group" style="width: 155px;">
+            <label for="exampleInputName1">price</label>
+            <input type="number" name= "price" class="form-control" id="exampleInputName1"  required>
+          </div>
+          <div class="form-group" style="width: 155px;">
+            <label for="exampleInputName1">Quantity</label>
+            <input type="number" name= "quantity" class="form-control" id="exampleInputName1"  required>
+          </div>
+          <div class="form-group">
+            <label for="exampleTextarea1">Description</label>
+            <textarea class="form-control" name="description" id="exampleTextarea1" rows="5" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Image-1 upload</label>
+            <input type="file" name="image1" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Image-2 upload</label>
+            <input type="file" name="image2" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Image-3 upload</label>
+            <input type="file" name="image3" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Extra Images <span class="text-danger">(can select multiple images)</span></label>
+            <input type="file" name="extra_images" class="form-control" multiple>
+          </div>
+          <div class="form-group" style="width: 155px;">
+            <label>Category</label>
+            <select class="js-example-basic-single" name="category" style="width:100%">
+                {% for category in categories %}
+              <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary mr-2">Submit</button>
+          <a href="{% url 'product_manage' %}" class="btn btn-dark">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

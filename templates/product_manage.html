@@ -1,0 +1,79 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12 main-datatable">
+        <div class="card_body">
+            <div class="row d-flex">
+            <div class="col-12  mt-3" style="text-align: center;">
+                    <h6 style="font-size: large;">PRODUCTS</h6>
+            </div> 
+        </div>
+
+            <div class="row d-flex">
+                <div class="col-4 createSegment"> 
+                 <a class="btn dim_button create_new" href="{% url 'product_create' %}"> <span class="glyphicon glyphicon-plus"></span> Create New</a>
+                </div>
+                <div class="col-8 add_flex">
+                    <div class="form-group searchInput">
+                        <label for="email">Search:</label>
+                        <input type="search" class="form-control" id="filterbox2" placeholder=" ">
+                    </div>
+                </div> 
+            </div>
+            <!-- <div class="overflow-x"> -->
+                <div class="table-responsive">
+                <table  id="filtertable2" class="table  dataTable no-footer " style="color:#fff; text-align: center;" >
+                    <thead>
+                        <tr>
+                            <th style="min-width:50px;color: #fff;">ID</th>
+                            <th style="min-width:150px;">Name</th>
+                            <th style="min-width:150px;">Image:1</th>
+                            <th style="min-width:150px;">Image:2</th>
+                            <th style="min-width:150px;">Image:3</th>
+                            <th style="min-width:100px;">Category</th>
+                            <th style="min-width:100px;">Price</th>
+                            <th style="min-width:100px;">Quantity</th>
+                            <th style="min-width:150px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in products %}
+                            <tr>
+                                <td>{{ i.id }}</td>
+                                <td>{{ i.name }}</td>
+                                <td><img src="{{ i.imageURL }}" alt="product image" style="height: 10%;width: 60%;border-radius:0;"></td>
+                                <td><img src="{{ i.imageURL2 }}" alt="product image" style="height: 10%;width: 60%;border-radius:0;"></td>
+                                <td><img src="{{ i.imageURL3 }}" alt="product image" style="height: 10%;width: 60%;border-radius:0;"></td>
+                                <td>{{ i.category }}</td>
+                                <td>${{ i.price|floatformat:2 }}</td>
+                                <td>{{ i.quantity }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a class="dropdown-toggle dropdown_icon" data-toggle="dropdown">
+                                            <i class="fa fa-ellipsis-h"></i>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown_more">
+                                            <li>
+                                                <a onclick=deleted(event) href="{% url 'product_delete' i.id %}">
+                                                    <i class="fa fa-trash-o"></i>Delete
+                                                </a>
+                                            </li>  
+                                            <li>
+                                                <a href="{% url 'product_update' i.id %}">
+                                                    <i class="fa fa-edit"></i> Update
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>  
+                        {% endfor %}      
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<!-- </div> -->
+</div>
+{% endblock %}

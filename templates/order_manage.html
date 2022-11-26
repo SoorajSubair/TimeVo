@@ -1,0 +1,116 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12 main-datatable">
+        <div class="card_body">
+            <div class="row d-flex">
+            <div class="col-12  mt-3" style="text-align: center;">
+                    <h6 style="font-size: large;">ORDERS</h6>
+            </div> 
+        </div>
+
+            <div class="row d-flex">
+                <div class="col-4 createSegment"> 
+                </div>
+                <div class="col-8 add_flex">
+                    <div class="form-group searchInput">
+                        <label for="email">Search:</label>
+                        <input type="search" class="form-control" id="filterbox2" placeholder=" ">
+                    </div>
+                </div> 
+            </div>
+            <!-- <div class="overflow-x"> -->
+                <div class="table-responsive">
+                <table  id="filtertable2" class="table  dataTable no-footer " style="color:#fff; text-align: center;" >
+                    <thead>
+                        <tr>
+                            <th style="min-width:50px;color: #fff;">ID</th>
+                            <th style="min-width:100px;">Customer</th>
+                            <th style="min-width:150px;">Date</th>
+                            <th style="min-width:150px;">Transaction ID</th>
+                            <th style="min-width:150px;">Items</th>
+                            <th style="min-width:150px;">Total</th>
+                            <th style="min-width:150px;">Payment</th>
+                            <th style="min-width:100px;">Status</th>
+                            <th style="min-width:150px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        {% if order.complete %}
+                            <tr>
+                                <td>{{ order.id }}</td>
+                                <td>{{ order.user }}</td>
+                                <td>{{ order.date_ordered }}</td>
+                                <td>{{ order.transaction_id }}</td>
+                                <td>{{ order.get_cart_items }}</td>
+                                <td>${{ order.get_cart_total|floatformat:2 }}</td>
+                                <td>{{ order.payment }}</td>
+                                <td>
+                                    <form >
+                                    <!-- <select data-order={{order.id}} class="js-example-basic-single status" style="width:140%; color: white; font-size: large;">
+                                        {% for status in status %}
+                                        <option value="{{ status }}"{% if status == order.status %}selected{% endif %}>{{ status }}</option>
+                                        {% endfor %}
+                                      </select> -->
+                                      <select onchange="status('{{order.id}}',this.value )" class="js-example-basic-single status" style="width:140%; color: white; font-size: large;">
+                                        {% for status in status %}
+                                        <option value="{{ status }}"{% if status == order.status %}selected{% endif %}>{{ status }}</option>
+                                        {% endfor %}
+                                      </select>
+                                    </form>
+                                </td>
+                                
+                                <td>
+                                    <a href="{% url 'order_view' order.id %}" type="button" class="btn btn-primary btn-fw" style="    min-width: 60%; line-height: 2; vertical-align: middle;">View</a>
+                                </td>
+                            </tr>  
+                        {% endif %}
+                        {% endfor %}      
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<!-- </div> -->
+</div>
+
+<script>
+
+    function status(orderId, status){
+        swal.fire({
+            title: "Order Status",
+            text: "Do you want to change the status of the order",
+            icon: "question",
+            showConfirmButton: true,
+            confirmButtonText: 'change status',
+            showCancelButton: true,
+          })
+          .then((result) => {
+            if (result.isConfirmed){
+                $.ajax({
+                    type: "GET",
+                    data: {
+                        "orderId": orderId,
+                        "status": status,
+                    },
+
+                    url : "status_update",
+                    success: function(response){
+                        location.reload()
+                        //swal.fire(response.status)
+                    }
+                });
+            }
+            else{
+                location.reload()
+            }
+          })
+    }
+
+       
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'user_base.html' %}
+{% load static %}
+{% block content %}
+<div class="breadcrumb-section breadcrumb-bg-color--golden">
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="breadcrumb-title">Register</h3><a href="">
+                    <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                        <nav aria-label="breadcrumb">
+                            <ul>
+                                <li><a href="{% url 'user_home' %}">Home</a></li>
+                                <li class="active" aria-current="page">Resgister</li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!-- ...:::: End Breadcrumb Section:::... -->
+
+<!-- ...:::: Start Customer Login Section :::... -->
+<div class="customer-login">
+    <div class="container">
+        <div class="row">
+            <!--login area start-->
+            <div class="col-lg-12 col-md-12">
+                <div class="account_form" data-aos="fade-up" data-aos-delay="0">
+                    <form action="" method="POST">
+                        {%csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="default-form-box">
+                                    <label>First Name <span>*</span></label>
+                                    <input type="text" name = "fname" required="">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="default-form-box">
+                                    <label>Last Name <span>*</span></label>
+                                    <input type="text" name = "lname" required="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="default-form-box">
+                                    <label>Username <span>*</span></label>
+                                    <input type="text" name = "reg_username" required="">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="default-form-box">
+                                    <label>Email <span>*</span></label>
+                                    <input type="text" name = "reg_email" required="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="default-form-box">
+                                    <label>Phone <span>*</span></label>
+                                    <input type="text" name = "phone" required="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="default-form-box">
+                                    <label>Password <span>*</span></label>
+                                    <input type="password" name = "password1" required="">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="default-form-box">
+                                    <label>Re-Password <span>*</span></label>
+                                    <input type="password" name = "password2" required="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="login_submit">
+                            <button class="btn btn-md btn-black-default-hover mb-4" type="submit">register</button>
+                            <label class="checkbox-default mb-4" for="offer">
+                                <input type="checkbox" id="offer">
+                                <span>Remember me</span>
+                            </label>
+                            <a href="{% url 'user_login' %}">Have an account?LOGIN</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!--login area end-->
+        </div>
+    </div>
+</div> <!-- ...:::: End Customer Login Section :::... -->
+{% endblock content %}

@@ -1,0 +1,34 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+<div class="col-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Update Category</h4>
+        <p class="card-description">{{ category.name }}</p>
+        <form class="forms-sample" method="post" enctype="multipart/form-data" action="{% url 'cat_update' category.id %}">
+            <input type="hidden" name="id" id="id" value="{{ category.id }}">
+            {% csrf_token %}
+          <div class="form-group">
+            <label for="exampleInputName1">Name</label>
+            <input type="text" name= "name" class="form-control" id="exampleInputName1" value = "{{ category.name }}" required>
+          </div>
+          <div class="form-group">
+            {% if category.image %}
+            <label style="display: block;">Current image</label>
+            <img src="{{ category.imageURL }}" alt="category image" style="width: 60px; height: 60px;">
+            {% endif %}
+            <div class="mt-2">
+            <label>Image upload</label>
+            <input type="file" name="image" class="form-control">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary mr-2">Submit</button>
+          <a href="{% url 'category_manage' %}" class="btn btn-dark">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

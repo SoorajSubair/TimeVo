@@ -1,0 +1,41 @@
+{% extends 'user_base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="breadcrumb-section breadcrumb-bg-color--golden">
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="breadcrumb-title">Order Complete</h3>
+                    <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+ <!-- ...:::: End Breadcrumb Section:::... -->
+
+<div class="empty-cart-section section-fluid">
+    <div class="emptycart-wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-md-10 offset-md-1 col-xl-6 offset-xl-3">
+                    <div class="emptycart-content text-center">
+                        <div class="image">
+                            <img class="img-fluid" src="{% static 'user_home/assets/images/emprt-cart/order_placed.png' %}" alt="">
+                        </div>
+                        <h4 class="title">CONGRATULATIONS!</h4>
+                        <h6 class="sub-title">Your Order has been placed successfully</h6>
+                        <a href="{% url 'user_home' %}" class="btn btn-lg btn-golden">Continue Shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

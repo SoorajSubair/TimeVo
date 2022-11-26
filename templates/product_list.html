@@ -1,0 +1,218 @@
+{% extends 'user_base.html' %}
+{% load static %}
+{% load user_home_extras %}
+{% block content %}
+    <!-- ...:::: Start Breadcrumb Section:::... -->
+    <div class="breadcrumb-section breadcrumb-bg-color--golden">
+        <div class="breadcrumb-wrapper">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h3 class="breadcrumb-title">{{ category.name }}'S</h3>
+                        <h3 class="breadcrumb-title-def">TimeVo is always creating new models for its popular {{ category.name }}’s watch collections. 
+                            All feature the brand’s signature design excellence, high-tech materials and contemporary styling.
+                             TimeVo watches for {{ category.name }}.</h3>
+                        <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                            <nav aria-label="breadcrumb">
+                                <ul>
+                                    <li><a href="{% url 'user_home' %}">Home</a></li>
+                                    <li class="active" aria-current="page">{{ category.name }}</li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- ...:::: End Breadcrumb Section:::... -->
+
+    <!-- ...:::: Start Shop Section:::... -->
+    <div class="shop-section" >
+        <div class="container">
+            <div class="row flex-column-reverse flex-lg-row" id="filtering">
+                <div class="col-lg-12" >
+                    <!-- Start Shop Product Sorting Section -->
+                    <div class="shop-sort-section">
+                        <div class="container">
+                            <div class="row">
+                                <!-- Start Sort Wrapper Box -->
+                                <div class="sort-box d-flex justify-content-between align-items-md-center align-items-start flex-md-row flex-column"
+                                    data-aos="fade-up" data-aos-delay="0">
+                                    <!-- Start Sort Select Option -->
+                                    <div class="sort-select-list d-flex align-items-center">
+                                        <label class="mr-2">Sort By:</label>
+                                        <form action="#">
+                                            <fieldset>
+                                                <select name="sort" id="sort-list" onchange="location = finalurl2();">
+                                                    <option value="" id="sort-placeholder" disabled selected hidden> -- select an option -- </option>
+                                                    <option id="name" value="name">Sort by name: A to Z</option>
+                                                    <option id="-name" value="-name">Sort by name: Z to A</option>
+                                                    <option id="price" value="price">Sort by price: low to high</option>
+                                                    <option id="-price" value="-price">Sort by price: high to low</option>
+                                                </select>
+                                            </fieldset>
+                                        </form>
+                                    </div> 
+                                    <div class="sort-select-list d-flex align-items-center">
+                                        <label class="mr-2">Filter By:</label>
+                                        <form action="#">
+                                            <fieldset>
+                                                <select name="filtering" id="filter-list" onchange="location = finalurl();">
+                                                    <option value="" id="filter-placeholder" disabled selected hidden> -- select an option -- </option>
+                                                    <option id="all" value="all">All</option>
+                                                    <option id="round" value="round">round</option>
+                                                    <option id="square" value="square">square</option>
+                                                    <option id="chain" value="chain">chain</option>
+                                                    <option id="leather" value="leather">leather</option>
+                                                </select>
+                                            </fieldset>
+                                        </form>
+                                    </div> 
+                                    <!-- End Sort Select Option -->
+
+                                </div> <!-- Start Sort Wrapper Box -->
+                            </div>
+                        </div>
+                    </div> <!-- End Section Content -->
+
+                    <!-- Start Tab Wrapper -->
+                    <div class="sort-product-tab-wrapper">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="tab-content">
+                                        <!-- Start Grid View Product -->
+                                        <div class="tab-pane active show sort-layout-single" id="layout-4-grid">
+                                            <div class="row" >
+                                                {% for product in products %}
+                                                <div class="col-xl-4 col-lg-4 col-sm-6 col-12">
+                                                    <!-- Start Product Default Single Item -->
+                                                    <div class="product-default-single-item product-color--golden"
+                                                        data-aos="fade-up" data-aos-delay="0" style="height: 550px;margin-right: 30px;">
+                                                        <div class="image-box" style="width: 100%; height: 450px;">
+                                                            <a href="{% url 'details' product.id %}" class="image-link" style="width: 100%; height: 100%;">
+                                                                <img src="{{ product.imageURL }}"
+                                                                    alt="" style="width: 100%; height: 100%;">
+                                                                <img src="{{ product.imageURL2 }}"
+                                                                    alt="" style="width: 100%; height: 100%;">
+                                                            </a>
+                                                            <div class="action-link">
+                                                                <div class="action-link-left">
+                                                                    <a data-product={{product.id}} data-action="add" class="update-cart" style="cursor: pointer;">Add to Cart</a>
+                                                                </div>
+                                                                <div class="action-link-right">
+                                                                    <a href="#"><i
+                                                                            class="icon-heart"></i></a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="content">
+                                                            <div class="content-left">
+                                                                <h6 class="title"><a
+                                                                        href="{% url 'details' product.id %}">{{ product.name }}</a></h6>
+                                                                <ul class="review-star">
+                                                                    <li class="fill"><i class="ion-android-star"></i>
+                                                                    </li>
+                                                                    <li class="fill"><i class="ion-android-star"></i>
+                                                                    </li>
+                                                                    <li class="fill"><i class="ion-android-star"></i>
+                                                                    </li>
+                                                                    <li class="fill"><i class="ion-android-star"></i>
+                                                                    </li>
+                                                                    <li class="empty"><i class="ion-android-star"></i>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                            <div class="content-right">
+                                                                <span class="price">${{ product.price|floatformat:2 }}</span>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                    <!-- End Product Default Single Item -->
+                                                </div> 
+                                                {% endfor %} 
+                                            </div>
+                                        </div> <!-- End Grid View Product -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- End Tab Wrapper -->
+
+                    <!-- Start Pagination -->
+                    <div class="page-pagination text-center" data-aos="fade-up" data-aos-delay="0">
+                        {% if products.has_other_pages %}
+                        <ul>
+                            {% if products.has_previous %}
+                            <!-- <li><a href="{% url 'list' category.id %}?page=1">First</a></li> -->
+                            <li><a href="{% url 'list' category.id %}{% my_url products.previous_page_number 'page' request.GET.urlencode %}"><i class="ion-ios-skipbackward"></i></a></li>
+                            
+                            {% else %}
+                            <li class="page-item disabled"></li>
+                            {% endif %}
+
+                            {% if products.number|add:'-2' > 1 %}
+                            <li><a href="{% url 'list' category.id %}{% my_url 1 'page' request.GET.urlencode %}">1</a></li>
+                            <li><a href="{% url 'list' category.id %}{% my_url products.number|add:'-2' 'page' request.GET.urlencode %}">&hellip;</a></li>
+                            {% endif %}
+
+                            {% for i in products.paginator.page_range %}
+                            {% if products.number == i %}
+                            <li><a class="active" href="#">{{ i }}</a></li>
+                            {% elif i > products.number|add:'-2' and i < products.number|add:'2' %}
+                            <li><a href="{% url 'list' category.id %}{% my_url i 'page' request.GET.urlencode %}">{{ i }}</a></li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if products.paginator.num_pages > products.number|add:'2' %}
+                            <li><a href="{% url 'list' category.id %}{% my_url products.number|add:'2' 'page' request.GET.urlencode %}">&hellip;</a></li>
+                            <li><a href="{% url 'list' category.id %}{% my_url products.paginator.num_pages 'page' request.GET.urlencode %}">{{products.paginator.num_pages}}</a></li>
+                            {% endif %}
+                           
+
+                            {% if products.has_next %}
+                            <li><a href="{% url 'list' category.id %}{% my_url products.next_page_number 'page' request.GET.urlencode %}"><i class="ion-ios-skipforward"></i></a></li>
+                            {% endif %}
+                        </ul>
+                        {% endif %}
+                    </div> <!-- End Pagination -->
+                </div> <!-- End Shop Product Sorting Section  -->
+            </div>
+        </div>
+    </div> <!-- ...:::: End Shop Section:::... -->
+
+<script>
+   
+
+if(get('sorting'))
+  document.getElementById('sort-placeholder').innerHTML = document.getElementById(get('sorting')).innerHTML;
+
+if(get('filtering'))
+  document.getElementById('filter-placeholder').innerHTML = document.getElementById('pr'+get('filtering')).innerHTML;
+
+
+
+
+    // for getting url after applying sorting
+  function finalurl2() {
+    var url = new URL(window.location.href);
+    var search_params = url.searchParams;
+    search_params.set('sorting', document.getElementById("sort-list").value);
+    url.search = search_params.toString();
+    var new_url = url.toString();
+    return new_url
+  }
+  
+  // for getting url after applying price filtering
+  function finalurl() {
+    var url = new URL(window.location.href);
+    var search_params = url.searchParams;
+    search_params.set('filtering', document.getElementById("filter-list").value);
+    url.search = search_params.toString();
+    var new_url = url.toString();
+    return new_url
+  }
+</script>
+
+{% endblock %}

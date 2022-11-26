@@ -1,0 +1,51 @@
+{% extends 'user_base.html' %}
+{% load static %}
+{% block content %}
+<div class="breadcrumb-section breadcrumb-bg-color--golden">
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="breadcrumb-title">Login</h3><a href="">
+                    <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                        <nav aria-label="breadcrumb">
+                            <ul>
+                                <li><a href="{% url 'user_login' %}">Login</a></li>
+                                <li class="active" aria-current="page">OTP</li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!-- ...:::: End Breadcrumb Section:::... -->
+
+<!-- ...:::: Start Customer Login Section :::... -->
+<div class="customer-login">
+    <div class="container">
+        <div class="row">
+            <!--login area start-->
+            <div class="col-lg-12 col-md-12">
+                <div class="account_form" data-aos="fade-up" data-aos-delay="0">
+                    <h3 class="text-center" style="color: #000;">Enter OTP send to your number{{ phone }}</h3>
+                    <form action="{% url 'otp_confirm' %}" method="POST">
+                        {%csrf_token %}
+                        <div class="default-form-box">
+                            <label>OTP <span>*</span></label>
+                            <input type="text" name = "otp" required="">
+                        </div>
+                        <div class="login_submit">
+                            <button class="btn btn-md btn-black-default-hover mb-4" type="submit">submit</button>
+                            <label class="checkbox-default mb-4" for="offer">
+                            </label>
+                            <a href="#">RE SEND</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!--login area end-->
+        </div>
+    </div>
+</div> <!-- ...:::: End Customer Login Section :::... -->
+{% endblock content %}

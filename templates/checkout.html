@@ -1,0 +1,211 @@
+{% extends 'user_base.html' %}
+{% load static %}
+{% block content %}
+   <!-- ...:::: Start Breadcrumb Section:::... -->
+    <div class="breadcrumb-section breadcrumb-bg-color--golden">
+        <div class="breadcrumb-wrapper">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h3 class="breadcrumb-title">Checkout</h3>
+                        <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                            <nav aria-label="breadcrumb">
+                                <ul>
+                                    <li><a href="{% url 'user_home' %}">Home</a></li>
+                                    <li><a href="{% url 'cart' %}">Cart</a></li>
+                                    <li class="active" aria-current="page">Checkout</li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- ...:::: End Breadcrumb Section:::... -->
+
+    <!-- ...:::: Start Checkout Section:::... -->
+    <div class="checkout-section">
+        <div class="container">
+            <div class="row">
+            </div>
+            <!-- Start User Details Checkout Form -->
+            <div class="checkout_form" data-aos="fade-up" data-aos-delay="400">
+                <div class="row">
+                    <div class="col-lg-6 col-md-6 mt-3">
+                        <form id="form">
+                            <h3>Billing Details</h3>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="default-form-box">
+                                        <label>First Name <span>*</span></label>
+                                        <input type="text" name="fname" value="{{request.user.first_name}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="default-form-box">
+                                        <label>Last Name <span>*</span></label>
+                                        <input type="text" name="lname" value="{{request.user.last_name}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <label>Street address <span>*</span></label>
+                                        <input type="text" name="street" value="{{address.address}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <input type="text" name="appartment" value="{{address.appartment_no}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <label>Town / City <span>*</span></label>
+                                        <input type="text" name="city" value="{{address.city}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <label>State<span>*</span></label>
+                                        <input type="text" name="state" value="{{address.state}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <label>Zipcode<span>*</span></label>
+                                        <input type="text" name="zipcode" value="{{address.zipcode}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="default-form-box">
+                                        <label>Phone<span>*</span></label>
+                                        <input type="text" name="phone" value="{{request.user.phone}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="default-form-box">
+                                        <label> Email Address <span>*</span></label>
+                                        <input type="email" name="email" value="{{request.user.email}}" required>
+                                    </div>
+                                </div>
+                                <!-- <div class="col-lg-6">
+                                    <div class="order_button pt-3">
+                                        <input id="form-button" class="btn btn-md btn-black-default-hover" type="submit" value="Continue">
+                                    </div>
+                                </div> -->
+                             </form>
+                             {% if not request.user.is_authenticated %}
+                            <hr class="mt-3">
+                                <div class="order_button pt-3">
+                                    <a href="{% url 'user_register' %}" class="btn btn-md btn-black-default-hover" >Create an account</a>
+                                </div>
+                            {% endif %}   
+                            </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6 mt-3">
+                        
+                            <h3>Your order</h3>
+                            <div class="order_table table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in items %}
+                                        <tr>
+                                            <td> {{ item.product.name }} <strong> × {{ item.quantity }}</strong></td>
+                                            <td> ${{ item.get_total|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th>Cart Subtotal</th>
+                                            <td>${{ order.get_cart_total|floatformat:2 }}</td>
+                                        </tr>
+                                        <tr class="order_total">
+                                            <th>Order Total</th>
+                                            <td><strong>${{ order.get_cart_total|floatformat:2 }}</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <div class="payment_user">
+                                <div class="order_button pt-3">
+                                    <button id="make-payment" class="btn btn-md btn-black-default-hover" type="submit">Proceed to
+                                        Payment</button>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div> <!-- Start User Details Checkout Form -->
+        </div>
+    </div><!-- ...:::: End Checkout Section:::... -->
+
+<script>
+    var form = document.getElementById('form')
+    var total = '{{order.get_cart_total}}'
+
+    document.getElementById('make-payment').addEventListener('click', function(e){
+        submitFormData()
+    })
+
+    function submitFormData(){
+        console.log('payment button clicked')
+
+        var userFormData = {
+            'fname': null,
+            'lname': null,
+            'email': null,
+            'phone': null,
+            'total': total,
+        }
+
+        var shippingInfo = {
+            'address': null,
+            'appartment': null,
+            'city': null,
+            'state': null,
+            'zipcode': null,
+            
+        }
+
+        
+            shippingInfo.address= form.street.value
+            shippingInfo.appartment= form.appartment.value
+            shippingInfo.city= form.city.value
+            shippingInfo.state= form.state.value
+            shippingInfo.zipcode= form.zipcode.value
+
+
+        if (user == 'AnonymousUser'){
+            userFormData.fname= form.fname.value
+            userFormData.lname= form.lname.value
+            userFormData.email= form.email.value
+            userFormData.phone= form.phone.value
+        }
+
+        var url = 'process_order'
+        fetch(url,{
+            method: 'POST',
+            headers:{
+                'content-Type':'application/json',
+                'X-CSRFToken':csrftoken,
+            },
+            body:JSON.stringify({'form':userFormData, 'shipping': shippingInfo})  
+        })
+        .then((response) => response.json())
+        .then((data) =>{
+            console.log('Success:', data);
+            window.location.href = "{% url 'order_complete' %}"
+            
+        })
+        
+    }
+
+</script>
+
+{% endblock content %}

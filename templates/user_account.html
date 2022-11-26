@@ -1,0 +1,157 @@
+{% extends 'user_base.html' %}
+{% load static %}
+{% block content %}
+<!-- ...:::: Start Breadcrumb Section:::... -->
+<div class="breadcrumb-section breadcrumb-bg-color--golden">
+    <div class="breadcrumb-wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="breadcrumb-title">My Profile</h3>
+                    <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                        <nav aria-label="breadcrumb">
+                            <ul>
+                                <li><a href="{% url 'user_home' %}">Home</a></li>
+                                <li class="active" aria-current="page">My Profile</li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!-- ...:::: End Breadcrumb Section:::... -->
+
+<!-- ...:::: Start Account Dashboard Section:::... -->
+<div class="account-dashboard">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 col-md-3 col-lg-3">
+                <!-- Nav tabs -->
+                <div class="dashboard_tab_button" data-aos="fade-up" data-aos-delay="0">
+                    <ul role="tablist" class="nav flex-column dashboard-list">
+                        <li> <a href="#orders" data-bs-toggle="tab"
+                                class="nav-link btn btn-block btn-md btn-black-default-hover active">Orders</a></li>
+                        <li><a href="#address" data-bs-toggle="tab"
+                                class="nav-link btn btn-block btn-md btn-black-default-hover">Addresses</a></li>
+                        <li><a href="#account-details" data-bs-toggle="tab"
+                                class="nav-link btn btn-block btn-md btn-black-default-hover">My Profile</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-9 col-lg-9">
+                <!-- Tab panes -->
+                <div class="tab-content dashboard_content" data-aos="fade-up" data-aos-delay="200">
+                    <div class="tab-pane fade show active" id="orders">
+                        <h4 style="color: #000;">Orders</h4>
+                        <div class="table_page table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for orders in orders %}
+                                    {% if orders.complete %}
+                                    <tr>
+                                        <td>{{orders.id}}</td>
+                                        <td>{{orders.date_ordered}}</td>
+                                        <td><span class="success">{{ orders.status }}</span></td>
+                                        <td>${{orders.get_cart_total|floatformat:2}} for {{orders.get_cart_items}} item </td>
+                                        <td><a href="{% url 'order_details' orders.id %}" class="view">view</a></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="address">
+                        <p>The following addresses will be used on the checkout page by default.</p>
+                        <h5 style="color: #000;" class="billing-address">Billing address</h5>
+                        <div class="row">
+                            <form action="" method="post">
+                                {% csrf_token %}
+                            <div class="col-12">
+                                <div class="default-form-box">
+                                    <label>Street address <span>*</span></label>
+                                    <input type="text" name="street" value="{{address.address}}" required>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="default-form-box">
+                                    <input placeholder="Apartment, suite, unit etc. (optional)" type="text" value="{{address.appartment_no}}" name="apartment">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="default-form-box">
+                                    <label>Town / City <span>*</span></label>
+                                    <input type="text" name="city" value="{{address.city}}" required>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="default-form-box">
+                                    <label>State<span>*</span></label>
+                                    <input type="text" name="state" value="{{address.state}}" required>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="default-form-box">
+                                    <label>Zip Code <span>*</span></label>
+                                    <input type="text" name="zipcode" value="{{address.zipcode}}" required>
+                                </div>
+                            </div>
+                            <div class="order_button pt-3">
+                                <button class="btn btn-md btn-black-default-hover" type="submit">Update Address</button>
+                            </div>
+                        </form>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="account-details">
+                        <h3 style="color:#000;">Account details </h3>
+                        <div class="login">
+                            <div class="login_form_container">
+                                <div class="account_login_form">
+                                    <form action="{% url 'user_account_update' %}" method="post">
+                                        {% csrf_token %}
+                                        <div class="default-form-box mb-20">
+                                            <label>Username</label>
+                                            <input type="text" name="username" value="{{request.user.username}}" required>
+                                        </div>
+                                        <div class="default-form-box mb-20">
+                                            <label>First Name</label>
+                                            <input type="text" name="fname" value="{{request.user.first_name}}" required>
+                                        </div>
+                                        <div class="default-form-box mb-20">
+                                            <label>Last Name</label>
+                                            <input type="text" name="lname" value="{{request.user.last_name}}" required>
+                                        </div>
+                                        <div class="default-form-box mb-20">
+                                            <label>Email</label>
+                                            <input type="email" name="email" value="{{request.user.email}}" required>
+                                        </div>
+                                        <div class="default-form-box mb-20">
+                                            <label>Phone</label>
+                                            <input type="text" name="phone" value="{{request.user.phone}}" required>
+                                        </div>
+                                        <div class="save_button mt-3">
+                                            <button class="btn btn-md btn-black-default-hover"
+                                                type="submit">Update Details</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!-- ...:::: End Account Dashboard Section:::... -->
+{% endblock content %}

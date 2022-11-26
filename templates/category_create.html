@@ -1,0 +1,26 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+<div class="col-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Create Category</h4>
+        <form class="forms-sample" method="post" enctype="multipart/form-data" action="{% url 'cat_create' %}">
+            {% csrf_token %}
+          <div class="form-group">
+            <label for="exampleInputName1">Name</label>
+            <input type="text" name= "name" class="form-control" id="exampleInputName1"  required>
+          </div>
+          <div class="form-group">
+            <label>Image upload</label>
+            <input type="file" name="image" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-primary mr-2">Submit</button>
+          <a href="{% url 'category_manage' %}" class="btn btn-dark">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
