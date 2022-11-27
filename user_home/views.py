@@ -9,10 +9,11 @@ from django.conf import settings
 from django.views.decorators.cache import never_cache
 from django.core.paginator import Paginator, EmptyPage
 from .mixins import Messghandler
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 import json
 import datetime
 from django.db.models import Q
+from .utils import cookieCart,cartData
 
 
 # Create your views here.
@@ -20,16 +21,34 @@ from django.db.models import Q
 
 @never_cache
 def user_home(request):
+
+    data = cartData(request)
+    cartItems = data['cartItems']
+
     if request.user.is_authenticated:
-        user = request.user
-        order, created = Order.objects.get_or_create(user=user, complete=False)
-        items = order.orderitem_set.all()
-        cartItems = order.get_cart_items
-        print(cartItems)
-    else:
-        items = []
-        order = {'get_cart_total':0, 'get_cart_items':0}
-        cartItems = order['get_cart_items']
+        try:
+            if len(request.COOKIES['cart']) > 2:
+                user = request.user
+                data = json.loads(request.COOKIES['cart'])
+
+                for i in data:
+                    product = Product.objects.get(id = i)
+                    order, created = Order.objects.get_or_create(user=user, complete=False)
+                    orderItem, created = OrderItem.objects.get_or_create(order = order, product = product)
+                    orderItem.quantity = data[i]["quantity"]
+                    orderItem.save()
+
+                try:
+                    cartItems = order.get_cart_items
+                except:
+                    pass
+
+                response = HttpResponseRedirect("checkout")
+                response.delete_cookie('cart')
+                return response
+        except:
+            pass
+
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
         search_product = Product.objects.filter(name__icontains=search_item)
@@ -50,6 +69,9 @@ def user_login(request):
     if request.user.is_authenticated:
         return redirect(user_home)
 
+    data = cartData(request)
+    cartItems = data['cartItems']
+
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
@@ -60,7 +82,9 @@ def user_login(request):
         else:
             messages.error(request, 'Username or Password is Incorrect')
             return redirect(user_login)
-    return render(request, 'user_login.html')
+
+    context = {"cartItems": cartItems}
+    return render(request, 'user_login.html', context)
 
 @never_cache
 def user_otp(request):
@@ -92,6 +116,8 @@ def otp_confirm(request):
     if request.user.is_authenticated:
         return redirect(user_home)
 
+    data = cartData(request)
+    cartItems = data['cartItems']
     phone = request.session['phone']
 
     if request.method == 'POST':
@@ -109,13 +135,16 @@ def otp_confirm(request):
             messages.error(request, 'OTP is Incorrect')
             return redirect(otp_confirm)
 
-    context = {"phone": phone}
+    context = {"phone": phone, "cartItems": cartItems}
     return render(request, 'otp.html', context)
 
 @never_cache
 def user_register(request):
     if 'username' in request.session:
         return redirect(user_home)
+
+    data = cartData(request)
+    cartItems = data['cartItems']
 
     if request.method == 'POST':
         reg_username = request.POST['reg_username']
@@ -155,7 +184,9 @@ def user_register(request):
             user_details = CustomUser.objects.create_user(username = reg_username , email = reg_email , password = password1 , first_name = first_name , last_name = last_name, phone = phone)    
             user_details.save()
             return redirect(user_login)
-    return render(request, 'user_register.html')
+
+    context = {"cartItems": cartItems}
+    return render(request, 'user_register.html', context)
 
 @never_cache
 def user_logout(request):
@@ -164,15 +195,9 @@ def user_logout(request):
 
 @never_cache
 def list(request, id):
-    if request.user.is_authenticated:
-        user = request.user
-        order, created = Order.objects.get_or_create(user=user, complete=False)
-        items = order.orderitem_set.all()
-        cartItems = order.get_cart_items
-    else:
-        items = []
-        order = {'get_cart_total':0, 'get_cart_items':0}
-        cartItems = order['get_cart_items']
+
+    data = cartData(request)
+    cartItems = data['cartItems']
 
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
@@ -211,15 +236,9 @@ def list(request, id):
 
 @never_cache
 def details(request, id):
-    if request.user.is_authenticated:
-        user = request.user
-        order, created = Order.objects.get_or_create(user=user, complete=False)
-        items = order.orderitem_set.all()
-        cartItems = order.get_cart_items
-    else:
-        items = []
-        order = {'get_cart_total':0, 'get_cart_items':0}
-        cartItems = order['get_cart_items']
+
+    data = cartData(request)
+    cartItems = data['cartItems']
 
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
@@ -240,15 +259,11 @@ def details(request, id):
 
 @never_cache
 def cart(request):
-    if request.user.is_authenticated:
-        user = request.user
-        order, created = Order.objects.get_or_create(user=user, complete=False)
-        items = order.orderitem_set.all()
-        cartItems = order.get_cart_items
-    else:
-        items = []
-        order = {'get_cart_total':0, 'get_cart_items':0}
-        cartItems = order['get_cart_items']
+
+    data = cartData(request)
+    cartItems = data['cartItems']
+    order = data['order']
+    items = data['items']
 
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
@@ -258,6 +273,12 @@ def cart(request):
         
     context = {"items":items,"order":order, "cartItems": cartItems}
     return render(request, 'cart.html', context)
+
+@never_cache
+def cart_item_delete(request, id):
+    item = OrderItem.objects.get(id = id)
+    item.delete()
+    return redirect(cart)
 
 @never_cache
 def update_item(request):
@@ -288,17 +309,12 @@ def wishlist(request):
 
 @never_cache
 def checkout(request):
-    if request.user.is_authenticated:
-        user = request.user
-        order, created = Order.objects.get_or_create(user=user, complete=False)
-        address, created = ShippingAddress.objects.get_or_create(user=user)
-        items = order.orderitem_set.all()
-        cartItems = order.get_cart_items
-    else:
-        address = []
-        items = []
-        order = {'get_cart_total':0, 'get_cart_items':0}
-        cartItems = order['get_cart_items']
+    
+    data = cartData(request)
+    cartItems = data['cartItems']
+    order = data['order']
+    items = data['items']
+    address = data['address']
         
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
@@ -307,7 +323,10 @@ def checkout(request):
         return render(request,'search_product_list.html',context)
 
     context = {"items":items,"order":order, "cartItems": cartItems, "address": address}
-    return render(request, 'checkout.html',context)
+    if request.user.is_authenticated:
+        return render(request, 'checkout.html',context)
+    else:
+        return redirect(user_login)
 
 @never_cache
 def process_order(request):
@@ -322,16 +341,22 @@ def process_order(request):
         orderItems = OrderItem.objects.filter(order = order)
 
         if total == float(order.get_cart_total):
+
+            for item in orderItems:
+                if item.product.quantity >= item.quantity:
+                    quantity = item.quantity
+                    item.product.quantity = (item.product.quantity - quantity)
+                    item.product.save()
+                else:
+                    messages.error(request,'Sorry your order item may out of stock!')
+                    print(messages.error)
+                    return JsonResponse('out of stock', safe=False)
+
             order.complete = True
             order.date_ordered = datetime.datetime.now()
-            for item in orderItems:
-                quantity = item.quantity
-                item.product.quantity = (item.product.quantity - quantity)
-                item.product.save()
             order.status = "Order Received"
             order.payment = "Cash"
         order.save()
-
 
         address, created = ShippingAddress.objects.get_or_create(user=user)
         address.order = order
@@ -341,15 +366,64 @@ def process_order(request):
         address.state = data['shipping']['state']
         address.zipcode = data['shipping']['zipcode']
         address.save()
-
-        
+ 
     else:
-        print('user is not logged in')
+        return JsonResponse('not authenticated', safe=False)
+
+    return JsonResponse('payment complete', safe=False)
+
+@never_cache
+def process_order_paypal(request):
+    transaction_id = datetime.datetime.now().timestamp()
+    data = json.loads(request.body)
+
+    if request.user.is_authenticated:
+        user = request.user
+        order, create = Order.objects.get_or_create(user=user, complete=False)
+        total = float(data['form']['total'])
+        order.transaction_id = transaction_id
+        orderItems = OrderItem.objects.filter(order = order)
+
+        if total == float(order.get_cart_total):
+
+            for item in orderItems:
+                if item.product.quantity >= item.quantity:
+                    quantity = item.quantity
+                    item.product.quantity = (item.product.quantity - quantity)
+                    item.product.save()
+                else:
+                    messages.error(request,'Sorry your order item may out of stock!')
+                    print(messages.error)
+                    return JsonResponse('out of stock', safe=False)
+
+            order.complete = True
+            order.date_ordered = datetime.datetime.now()
+            order.status = "Order Received"
+            order.payment = "Paypal"
+        order.save()
+
+        address, created = ShippingAddress.objects.get_or_create(user=user)
+        address.order = order
+        address.address = data['shipping']['address']
+        address.appartment_no = data['shipping']['appartment']
+        address.city = data['shipping']['city']
+        address.state = data['shipping']['state']
+        address.zipcode = data['shipping']['zipcode']
+        address.save()
+ 
+    else:
+        return JsonResponse('not authenticated', safe=False)
+
     return JsonResponse('payment complete', safe=False)
 
 @never_cache
 def order_complete(request):
-    return render(request, 'order_complete.html')
+
+    data = cartData(request)
+    cartItems = data['cartItems']
+
+    context = {"cartItems": cartItems}
+    return render(request, 'order_complete.html', context)
 
 @never_cache
 def user_account(request):

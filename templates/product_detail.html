@@ -33,18 +33,18 @@
                     <div class="product-large-image product-large-image-horaizontal swiper-container" style="width: 100% !important;">
                         <div class="swiper-wrapper">
                             <div class="product-image-large-image swiper-slide img-responsive zoom-image-hover">
-                                <img src="{{ product.imageURL }}" alt="">
+                                <img src="{{ product.imageURL }}" alt="product-image">
                             </div>
                             <div class="product-image-large-image swiper-slide img-responsive zoom-image-hover">
-                                <img src="{{ product.imageURL2 }}" alt="">
+                                <img src="{{ product.imageURL2 }}" alt="product-image">
                             </div>
                             <div class="product-image-large-image swiper-slide img-responsive zoom-image-hover">
-                                <img src="{{ product.imageURL3 }}" alt="">
+                                <img src="{{ product.imageURL3 }}" alt="product-image">
                             </div>
                             {% if extraImages.count > 0 %}
                             {% for image in extraImages %}
                             <div class="product-image-large-image swiper-slide img-responsive zoom-image-hover">
-                                <img src="{{ image.imageURL }}" alt="">
+                                <img src="{{ image.imageURL }}" alt="product-image">
                             </div>
                             {% endfor %}
                             {% endif %}
@@ -57,21 +57,21 @@
                         <div class="swiper-wrapper">
                             <div class="product-image-thumb-single swiper-slide ">
                                 <img class="img-fluid" src="{{ product.imageURL }}"
-                                    alt="">
+                                    alt="product-image">
                             </div>
                             <div class="product-image-thumb-single swiper-slide">
                                 <img class="img-fluid" src="{{ product.imageURL2 }}"
-                                    alt="">
+                                    alt="product-image">
                             </div>
                             <div class="product-image-thumb-single swiper-slide">
                                 <img class="img-fluid" src="{{ product.imageURL3 }}"
-                                    alt="">
+                                    alt="product-image">
                             </div>
                           
                             {% for image in extraImages %}
                             <div class="product-image-thumb-single swiper-slide">
                                 <img class="img-fluid" src="{{ image.imageURL }}"
-                                    alt="">
+                                    alt="product-image">
                             </div>
                             {% endfor %}
                             
@@ -107,8 +107,12 @@
                         <h4 class="title" style="color: #000;">Available Options</h4>
                         <!-- Product Variable Single Item -->
                         <div class="variable-single-item">
-                            <div class="product-stock"> <span class="product-stock-in"><i
-                                        class="ion-checkmark-circled"></i></span> {{ product.quantity }} IN STOCK</div>
+                            {% if product.quantity > 5 %}
+                            <div class="product-stock"> <span class="product-stock-in mr-1"><i
+                                        class="ion-checkmark-circled"></i></span>IN STOCK</div>
+                            {% else %}
+                            <div class="product-stock text-danger">HURRY ONLY {{ product.quantity }} LEFT</div>
+                            {% endif %}
                         </div>
                         <!-- Product Variable Single Item -->
                         <div class="d-flex align-items-center ">
@@ -124,7 +128,7 @@
                             </div>
                         </div>
                         <!-- Start  Product Details Meta Area-->
-                        <div class="product-details-meta mb-20">
+                        <div class="product-details-meta mb-20 mt-2">
                             <a href="" class="icon-space-right"><i class="icon-heart"></i>Add to
                                 wishlist</a>
                         </div> <!-- End  Product Details Meta Area-->

@@ -156,4 +156,6 @@ ACCOUNT_SID = config('ACCOUNT_SID')
 
 ACCOUNT_TOKEN = config('ACCOUNT_TOKEN')
 
+SECURE_CROSS_ORIGIN_OPENER_POLICY='same-origin-allow-popups'
+
 

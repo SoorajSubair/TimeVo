@@ -68,7 +68,7 @@ class StrapType(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=200 , null=True , blank=True)
-    price = models.FloatField(null=True , blank=True)
+    price = models.DecimalField(max_digits=7, decimal_places=2, null=True , blank=True)
     quantity = models.IntegerField(null=True , blank=True)
     description = models.TextField(max_length = 2000)
     image = models.ImageField(null=True , blank=True)
