@@ -36,6 +36,26 @@
                             <!-- Start Product Default Single Item -->
                             <div class="blog-list blog-list-single-item blog-color--golden" data-aos="fade-up"
                                 data-aos-delay="0">
+                                {% if order.status == 'Order Cancel' %}
+                                <div class="empty-cart-section section-fluid">
+                                    <div class="emptycart-wrapper">
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col-12 col-md-10 offset-md-1 col-xl-6 offset-xl-3">
+                                                    <div class="emptycart-content text-center">
+                                                        <div class="image">
+                                                            <img class="img-fluid" src="{% static 'user_home/assets/images/emprt-cart/empty-cart.png' %}" alt="">
+                                                        </div>
+                                                        <h4 class="title">Sorry your order has been cancelled</h4>
+                                                        <h6 class="sub-title">Don't Worry, You can order again!</h6>
+                                                        <a href="{% url 'user_home' %}" class="btn btn-lg btn-golden">Continue Shopping</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
                                 {% for product in products %}
                                 <div class="row mt-3">
                                     <div class="col-xl-4 col-md-5" style="height: 350px;">
@@ -52,7 +72,7 @@
                                             <ul >
                                                 <li>ORDER PLACED ON : <a class="date">{{order.date_ordered}}</a></li>
                                                 
-                                                <li class="mt-2" style="font-size: medium;">Price : <a class="date">${{product.price}}</a></li>
+                                                <li class="mt-2" style="font-size: medium;">Price : <a class="date">₹{{product.price}}</a></li>
                                                 <li class="mt-2" style="font-size: medium;">Status : <a class="date">{{ order.status }}</a></li>
                                             </ul>
                                             <div class="product-add-to-cart-btn mt-5">
@@ -78,14 +98,14 @@
                                     <div class="col-xl-6" style="padding-top: 20px;">
                                         <ul >
                                             <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">{{order.get_cart_items}}</li>
-                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">${{order.get_cart_total|floatformat:2}}</li>
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.get_cart_total|floatformat:2}}</li>
                                             <div class="product-add-to-cart-btn mt-5" style="text-align: center;">
                                                 <a onclick=order_delete(event) href="{% url 'order_delete' order.id %}" style="cursor: pointer;">Cancel Order</a>   
                                             </div>
                                         </ul>
                                     </div>
-                                
                                 </div>
+                                {% endif %}
                             </div>
                             <!-- End Product Default Single Item -->
                         </div>

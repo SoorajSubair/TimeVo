@@ -14,7 +14,7 @@ import json
 import datetime
 from django.db.models import Q
 from .utils import cookieCart,cartData
-
+import razorpay
 
 # Create your views here.
 
@@ -52,7 +52,7 @@ def user_home(request):
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
         search_product = Product.objects.filter(name__icontains=search_item)
-        context = {"search_product": search_product}
+        context = {"search_product": search_product, "cartItems": cartItems}
         return render(request,'search_product_list.html',context)
 
     main_banner = MainBanners.objects.all()
@@ -315,14 +315,18 @@ def checkout(request):
     order = data['order']
     items = data['items']
     address = data['address']
-        
+    client = razorpay.Client(auth=(settings.RAZORPAY_ID, settings.RAZORPAY_ACCOUNT_ID))
+    payment = client.order.create({'amount': float(order.get_cart_total) * 100, 'currency': 'INR' , 'payment_capture': 1})
+    order.transaction_id = payment['id']
+    order.save()
+     
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
         search_product = Product.objects.filter(name__icontains=search_item)
         context = {"search_product": search_product}
         return render(request,'search_product_list.html',context)
 
-    context = {"items":items,"order":order, "cartItems": cartItems, "address": address}
+    context = {"items":items,"order":order, "cartItems": cartItems, "address": address, "payment": payment}
     if request.user.is_authenticated:
         return render(request, 'checkout.html',context)
     else:
@@ -330,6 +334,9 @@ def checkout(request):
 
 @never_cache
 def process_order(request):
+    if not request.user.is_authenticated:
+        return redirect(user_home)
+
     transaction_id = datetime.datetime.now().timestamp()
     data = json.loads(request.body)
 
@@ -353,10 +360,18 @@ def process_order(request):
                     return JsonResponse('out of stock', safe=False)
 
             order.complete = True
-            order.date_ordered = datetime.datetime.now()
+            order.date_ordered = datetime.datetime.today()
             order.status = "Order Received"
-            order.payment = "Cash"
+            order.payment = data['method']
         order.save()
+
+        if order.complete == True:
+            sales, create = SalesReport.objects.get_or_create(date = datetime.date.today())
+            if sales.sale == None:
+                sales.sale = order.get_cart_total
+            else:
+                sales.sale = sales.sale + order.get_cart_total
+            sales.save()
 
         address, created = ShippingAddress.objects.get_or_create(user=user)
         address.order = order
@@ -366,53 +381,6 @@ def process_order(request):
         address.state = data['shipping']['state']
         address.zipcode = data['shipping']['zipcode']
         address.save()
- 
-    else:
-        return JsonResponse('not authenticated', safe=False)
-
-    return JsonResponse('payment complete', safe=False)
-
-@never_cache
-def process_order_paypal(request):
-    transaction_id = datetime.datetime.now().timestamp()
-    data = json.loads(request.body)
-
-    if request.user.is_authenticated:
-        user = request.user
-        order, create = Order.objects.get_or_create(user=user, complete=False)
-        total = float(data['form']['total'])
-        order.transaction_id = transaction_id
-        orderItems = OrderItem.objects.filter(order = order)
-
-        if total == float(order.get_cart_total):
-
-            for item in orderItems:
-                if item.product.quantity >= item.quantity:
-                    quantity = item.quantity
-                    item.product.quantity = (item.product.quantity - quantity)
-                    item.product.save()
-                else:
-                    messages.error(request,'Sorry your order item may out of stock!')
-                    print(messages.error)
-                    return JsonResponse('out of stock', safe=False)
-
-            order.complete = True
-            order.date_ordered = datetime.datetime.now()
-            order.status = "Order Received"
-            order.payment = "Paypal"
-        order.save()
-
-        address, created = ShippingAddress.objects.get_or_create(user=user)
-        address.order = order
-        address.address = data['shipping']['address']
-        address.appartment_no = data['shipping']['appartment']
-        address.city = data['shipping']['city']
-        address.state = data['shipping']['state']
-        address.zipcode = data['shipping']['zipcode']
-        address.save()
- 
-    else:
-        return JsonResponse('not authenticated', safe=False)
 
     return JsonResponse('payment complete', safe=False)
 
@@ -468,6 +436,12 @@ def user_account_update(request):
             last_name = request.POST['lname']
             email = request.POST['email']
             phone = request.POST['phone']
+            try:
+                if len(request.FILES['profile_image'] ) != 0:
+                    request.user.image.delete()
+                    image = request.FILES['profile_image']
+            except:
+                pass
             if CustomUser.objects.filter(username = username).filter(~Q(username = request.user.username)).exists():
                 messages.error(request,'Already taken username')
                 return redirect(user_account)
@@ -484,6 +458,7 @@ def user_account_update(request):
                 user.last_name = last_name
                 user.email = email 
                 user.phone = phone
+                user.image = image
                 user.save()
                 messages.success(request,'Account details updated successfully!!')
                 return redirect(user_account)
@@ -504,25 +479,40 @@ def order_details(request, id):
 
     cartItems = orders.get_cart_items
     if len(items) <=0 :
-        return redirect(order_delete, id)
+        order.status = 'Order Cancel'
+        sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
+        sales.sale = sales.sale - order.get_cart_total
+        sales.save()
+        order.save()
 
     context = {"items": items, "cartItems": cartItems, "address":address, "order": order, "products": products}
     return render(request, 'order_details.html', context)
 
 @never_cache
 def order_delete(request, id):
-    order = Order.objects.filter(id = id)
+    order = Order.objects.get(id = id)
     orderItems = OrderItem.objects.filter(order_id = id)
+    sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
+    sales.sale = sales.sale - order.get_cart_total
+    sales.save()
+
     for item in orderItems:
         quantity = item.quantity
         item.product.quantity = (item.product.quantity + quantity)
         item.product.save()
-    order.delete()
+        item.delete()
+
+    order.status = 'Order Cancel'
+    order.save()
     return redirect(user_account)
 
 @never_cache
 def orderItem_delete(request, p_id, o_id):
     item = OrderItem.objects.get(order_id = o_id, product_id = p_id)
+    order = Order.objects.get(id = o_id)
+    sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
+    sales.sale = sales.sale - item.product.price
+    sales.save()
     item.quantity = (item.quantity - 1)
     item.product.quantity = (item.product.quantity + 1)
     item.product.save()

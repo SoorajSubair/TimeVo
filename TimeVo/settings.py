@@ -158,4 +158,8 @@ ACCOUNT_TOKEN = config('ACCOUNT_TOKEN')
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY='same-origin-allow-popups'
 
+#Razorpay settings
+RAZORPAY_ID = config('RAZORPAY_ID')
+RAZORPAY_ACCOUNT_ID = config('RAZORPAY_ACCOUNT_ID')
+
 

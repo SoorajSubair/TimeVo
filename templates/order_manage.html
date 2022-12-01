@@ -45,7 +45,7 @@
                                 <td>{{ order.date_ordered }}</td>
                                 <td>{{ order.transaction_id }}</td>
                                 <td>{{ order.get_cart_items }}</td>
-                                <td>${{ order.get_cart_total|floatformat:2 }}</td>
+                                <td>₹{{ order.get_cart_total|floatformat:2 }}</td>
                                 <td>{{ order.payment }}</td>
                                 <td>
                                     <form >

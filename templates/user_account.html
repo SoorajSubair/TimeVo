@@ -1,6 +1,42 @@
 {% extends 'user_base.html' %}
 {% load static %}
 {% block content %}
+<style>
+    .profile-pic-div{
+        height: 150px;
+        width: 150px;
+        position: relative;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 1px solid grey;
+    }
+    
+    #photo{
+        height: 100%;
+        width: 100%;
+    }
+    
+    #file{
+        display: none;
+    }
+    
+    #uploadBtn{
+        height: 40px;
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        background: rgba(0, 0, 0, 0.7);
+        color: wheat;
+        line-height: 30px;
+        font-family: sans-serif;
+        font-size: 15px;
+        cursor: pointer;
+        display: none;
+    }
+</style>
 <!-- ...:::: Start Breadcrumb Section:::... -->
 <div class="breadcrumb-section breadcrumb-bg-color--golden">
     <div class="breadcrumb-wrapper">
@@ -63,7 +99,7 @@
                                         <td>{{orders.id}}</td>
                                         <td>{{orders.date_ordered}}</td>
                                         <td><span class="success">{{ orders.status }}</span></td>
-                                        <td>${{orders.get_cart_total|floatformat:2}} for {{orders.get_cart_items}} item </td>
+                                        <td>₹{{orders.get_cart_total|floatformat:2}} for {{orders.get_cart_items}} item </td>
                                         <td><a href="{% url 'order_details' orders.id %}" class="view">view</a></td>
                                     </tr>
                                     {% endif %}
@@ -118,9 +154,17 @@
                         <div class="login">
                             <div class="login_form_container">
                                 <div class="account_login_form">
-                                    <form action="{% url 'user_account_update' %}" method="post">
+                                    <form action="{% url 'user_account_update' %}" method="post" enctype="multipart/form-data">
                                         {% csrf_token %}
-                                        <div class="default-form-box mb-20">
+                                        <div class="default-form-box mb-20 mt-2">
+                                        <div class="profile-pic-div">
+                                            <img src="{{request.user.imageURL}}" id="photo">
+                                            <input type="file" name="profile_image" id="file">
+                                            <label for="file" id="uploadBtn">Choose Photo</label>
+                                        </div>
+                                        </div>
+                                    
+                                        <div class="default-form-box mb-20 mt-2">
                                             <label>Username</label>
                                             <input type="text" name="username" value="{{request.user.username}}" required>
                                         </div>
@@ -153,5 +197,49 @@
             </div>
         </div>
     </div>
-</div> <!-- ...:::: End Account Dashboard Section:::... -->
+</div> 
+<!-- ...:::: End Account Dashboard Section:::... -->
+
+<script>
+    //declearing html elements
+
+const imgDiv = document.querySelector('.profile-pic-div');
+const img = document.querySelector('#photo');
+const file = document.querySelector('#file');
+const uploadBtn = document.querySelector('#uploadBtn');
+
+//if user hover on img div 
+
+imgDiv.addEventListener('mouseenter', function(){
+    uploadBtn.style.display = "block";
+});
+
+//if we hover out from img div
+
+imgDiv.addEventListener('mouseleave', function(){
+    uploadBtn.style.display = "none";
+});
+
+//lets work for image showing functionality when we choose an image to upload
+
+//when we choose a foto to upload
+
+file.addEventListener('change', function(){
+    //this refers to file
+    const choosedFile = this.files[0];
+
+    if (choosedFile) {
+
+        const reader = new FileReader(); //FileReader is a predefined function of JS
+
+        reader.addEventListener('load', function(){
+            img.setAttribute('src', reader.result);
+        });
+
+        reader.readAsDataURL(choosedFile);
+
+        
+    }
+});
+</script>
 {% endblock content %}

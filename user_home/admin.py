@@ -13,5 +13,6 @@ admin.site.register(SubBanners)
 admin.site.register(CaseShape)
 admin.site.register(StrapType)
 admin.site.register(ExtraImages)
+admin.site.register(SalesReport)
 
 

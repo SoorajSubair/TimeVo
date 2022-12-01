@@ -8,6 +8,7 @@ from django.http import JsonResponse
 import json
 from django.db.models import Q
 import os
+import datetime
 
 # Create your views here.
 
@@ -36,9 +37,43 @@ def administration_login(request):
 @never_cache
 def admin_home(request):
     if request.user.is_authenticated and request.user.is_superuser:
-        return render(request,'admin_home.html')
+        sales = []
+        all_sales =SalesReport.objects.all().order_by('-date')[:7]
+        for sale in all_sales:
+            sales.append(sale)
+            
+        context = {"sales": sales}
+        return render(request,'admin_home.html', context)
 
     return redirect(administration_login)
+
+@never_cache
+def date_filter(request):
+    sales = []
+    sales_date = []
+    sales_amount =[]
+    all_sales =SalesReport.objects.all().order_by('date')
+    start = request.GET.get("startdate",'')
+    end = request.GET.get("enddate",'')
+    format = '%Y-%m-%d'
+
+    startdate = datetime.datetime.strptime(start, format).date()
+    enddate = datetime.datetime.strptime(end, format).date()
+    diff = str(enddate - startdate)
+    if diff == '0:00:00':
+        limit = int(diff.split(':')[0])
+    else:
+        limit = int(diff.split()[0])
+
+    for i in range(limit+1):
+        for sale in all_sales:
+            if sale.date == startdate:
+                sales_date.append(sale.date)
+                sales_amount.append(sale.sale)
+            
+        startdate += datetime.timedelta(days=1)
+        
+    return JsonResponse({'sale_amount': sales_amount, 'sale_date': sales_date}, safe=False)
 
 @never_cache
 def admin_logout(request):
@@ -311,6 +346,17 @@ def status_update(request):
             status = request.GET['status']
             
             order = Order.objects.get(id = orderId)
+            if status == 'Order Cancel':
+                orderItems = OrderItem.objects.filter(order_id = orderId)
+                sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
+                sales.sale = sales.sale - order.get_cart_total
+                sales.save()
+                for item in orderItems:
+                    quantity = item.quantity
+                    item.product.quantity = (item.product.quantity + quantity)
+                    item.product.save()
+                    item.delete()
+              
             order.status = status
             order.save()
             return JsonResponse('status updated', safe=False)
@@ -330,7 +376,11 @@ def order_view(request, id):
                 products.append(prod)
 
         if len(items) <=0 :
-            order.delete()
+            order.status = 'Order Cancel'
+            sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
+            sales.sale = sales.sale - order.get_cart_total
+            sales.save()
+            order.save()
             return redirect(order_manage)
 
         context = {"order": order, "items": items, "products": products}
@@ -342,6 +392,10 @@ def order_view(request, id):
 def admin_orderItem_delete(request, p_id, o_id):
     if request.user.is_authenticated and request.user.is_superuser:
         item = OrderItem.objects.get(order_id = o_id, product_id = p_id)
+        order = Order.objects.get(id = o_id)
+        sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
+        sales.sale = sales.sale - item.product.price
+        sales.save()
         item.quantity = (item.quantity - 1)
         item.product.quantity = (item.product.quantity + 1)
         item.product.save()

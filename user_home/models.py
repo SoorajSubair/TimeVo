@@ -1,10 +1,21 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from datetime import date
+
 
 # Create your models here.
 
 class CustomUser(AbstractUser):
     phone = models.CharField(max_length=15, unique=True)
+    image = models.ImageField(null=True , blank=True)
+
+    @property
+    def imageURL(self):
+        try:
+            url = self.image.url
+        except:
+            url = ""
+        return url
 
 class MainBanners(models.Model):
     name = models.CharField(max_length = 200 , null=True , blank=True)
@@ -117,15 +128,20 @@ class ExtraImages(models.Model):
         except:
             url = ''
         return url
+
+class SalesReport(models.Model):
+    sale = models.DecimalField(default=0, max_digits=10, decimal_places=2, null=True , blank=True)
+    date = models.DateField(default=date.today,unique=True)
         
 
 class Order(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
-    date_ordered = models.DateTimeField(auto_now_add=True)
+    date_ordered = models.DateField(default=date.today)
     complete = models.BooleanField(default=False)
     transaction_id = models.CharField(max_length=100, null=True)
     status = models.CharField(max_length=100, null=True, blank=True)
     payment = models.CharField(max_length=100, null=True, blank=True)
+   
 
     def __str__(self):
         return str(self.user)
@@ -146,7 +162,9 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, related_name='ordered_product', on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
-    date_added = models.DateTimeField(auto_now_add=True)
+    date_added =models.DateField(default=date.today)
+
+    
 
     @property
     def get_total(self):
@@ -169,5 +187,9 @@ class ShippingAddress(models.Model):
 
     def __str__(self):
         return str(self.user)
+
+
+
+
 
   

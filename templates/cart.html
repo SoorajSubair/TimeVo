@@ -76,7 +76,7 @@
                                                     src="{{ item.product.imageURL }}"
                                                     alt=""></a></td>
                                         <td class="product_name"><a href="#">{{ item.product.name }}</a></td>
-                                        <td class="product-price">${{ item.product.price|floatformat:2 }}</td>
+                                        <td class="product-price">₹{{ item.product.price|floatformat:2 }}</td>
                                         <td class="product_quantity">
                                             <div class="row">
                                             <div class="col-7" style="display: inline; text-align: end; padding-right: 0px;"><label>Quantity</label><span style="margin-left: 3px;">x</span>
@@ -88,7 +88,7 @@
                                             </div>
                                         </div>
                                         </td>
-                                        <td class="product_total">${{ item.get_total|floatformat:2 }}</td>
+                                        <td class="product_total">₹{{ item.get_total|floatformat:2 }}</td>
                                     </tr> 
                                     {% endfor %}
                                     <!-- End Cart Single Item-->
@@ -128,17 +128,17 @@
                             </div>
                             <div class="cart_subtotal">
                                 <p>Subtotal</p>
-                                <p class="cart_amount">${{ order.get_cart_total|floatformat:2 }}</p>
+                                <p class="cart_amount">₹{{ order.get_cart_total|floatformat:2 }}</p>
                             </div>
                             <!-- <div class="cart_subtotal ">
                                 <p>Shipping</p>
-                                <p class="cart_amount"><span>Flat Rate:</span> $255.00</p>
+                                <p class="cart_amount"><span>Flat Rate:</span> ₹255.00</p>
                             </div>
                             <a href="#">Calculate shipping</a> -->
                             <hr>
                             <div class="cart_subtotal">
                                 <p>Total</p>
-                                <p class="cart_amount">${{ order.get_cart_total|floatformat:2 }}</p>
+                                <p class="cart_amount">₹{{ order.get_cart_total|floatformat:2 }}</p>
                             </div>
                             <div class="checkout_btn">
                                 <a href="{% url 'checkout' %}" class="btn btn-md btn-golden">Proceed to Checkout</a>

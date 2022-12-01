@@ -21,12 +21,7 @@ urlpatterns = [
     path('list/update_item', views.update_item, name='list_update_item'),
     path('list/details/update_item', views.update_item, name='list_details_update_item'),
     path('process_order', views.process_order, name='process_order'),
-    path('process_order_paypal', views.process_order_paypal, name='process_order_paypal'),
     path('order_complete', views.order_complete, name='order_complete'),
     path('order_delete/<int:id>', views.order_delete, name='order_delete'),
     path('orderItem_delete/<int:p_id>/<int:o_id>', views.orderItem_delete, name='orderItem_delete'),
-
-  
-
-
 ]
