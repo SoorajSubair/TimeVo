@@ -507,10 +507,6 @@
     <!-- Offcanvas Overlay -->
     <div class="offcanvas-overlay"></div>
 
-    <div id="content-wrapper" class="d-flex flex-column">
-        {% include 'messages.html' %}
-    </div>
-
     {% block content %}
     {% endblock content %}
 
@@ -829,6 +825,8 @@
     <script src="{% static 'user_home/assets/js/plugins/jquery.instagramFeed.js' %}"></script>
     <script src="{% static 'user_home/assets/js/plugins/ajax-mail.js' %}"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    
     
     <!-- Use the minified version files listed below for better performance and remove the files listed above -->
     <!-- <script src="assets/js/vendor/vendor.min.js"></script>

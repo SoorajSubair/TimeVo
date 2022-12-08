@@ -16,13 +16,13 @@
                 <div class="col-8 add_flex">
                     <div class="form-group searchInput">
                         <label for="email">Search:</label>
-                        <input type="search" class="form-control" id="filterbox2" placeholder=" ">
+                        <input type="search" class="form-control" id="filterbox3" placeholder=" ">
                     </div>
                 </div> 
             </div>
             <!-- <div class="overflow-x"> -->
                 <div class="table-responsive">
-                <table  id="filtertable2" class="table  dataTable no-footer " style="color:#fff; text-align: center;" >
+                <table  id="filtertable3" class="table  dataTable no-footer " style="color:#fff; text-align: center;" >
                     <thead>
                         <tr>
                             <th style="min-width:50px;color: #fff;">ID</th>
@@ -44,8 +44,17 @@
                                 <td>{{ order.user }}</td>
                                 <td>{{ order.date_ordered }}</td>
                                 <td>{{ order.transaction_id }}</td>
+                                {% if order.get_cart_items > 0 %}
                                 <td>{{ order.get_cart_items }}</td>
+                                {% if order.order_coupon %}
+                                <td>₹{{ order.total|floatformat:2 }}</td>
+                                {% else %}
                                 <td>₹{{ order.get_cart_total|floatformat:2 }}</td>
+                                {% endif %}
+                                {% else %}
+                                <td>{{ order.get_canceled_items }}</td>
+                                <td>₹{{ order.get_canceled_total|floatformat:2 }}</td>
+                                {% endif %}
                                 <td>{{ order.payment }}</td>
                                 <td>
                                     <form >
@@ -54,16 +63,20 @@
                                         <option value="{{ status }}"{% if status == order.status %}selected{% endif %}>{{ status }}</option>
                                         {% endfor %}
                                       </select> -->
-                                      <select onchange="status('{{order.id}}',this.value )" class="js-example-basic-single status" style="width:140%; color: white; font-size: large;">
+                                      {% if order.status == 'Order Cancel' %}
+                                      <span class="text-danger">canceled</span>
+                                      {% else %}
+                                      <select onchange="status('{{order.id}}',this.value )" class="js-example-basic-single status" style="width:120%; color: white; font-size: large;">
                                         {% for status in status %}
                                         <option value="{{ status }}"{% if status == order.status %}selected{% endif %}>{{ status }}</option>
                                         {% endfor %}
+                                        {% endif %}
                                       </select>
                                     </form>
                                 </td>
                                 
-                                <td>
-                                    <a href="{% url 'order_view' order.id %}" type="button" class="btn btn-primary btn-fw" style="    min-width: 60%; line-height: 2; vertical-align: middle;">View</a>
+                                <td>      
+                                    <a href="{% url 'order_view' order.id %}" type="button" class="btn btn-primary btn-fw" style="min-width: 60%; line-height: 2; vertical-align: middle;">View</a>
                                 </td>
                             </tr>  
                         {% endif %}

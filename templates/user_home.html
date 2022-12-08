@@ -95,7 +95,7 @@
                             <img src="{% static 'user_home/assets/images/icons/service-promo-8.png' %}" alt="">
                         </div>
                         <div class="content">
-                            <h6 style="color: #000;" class="title">LOYALTY CUSTOMER</h6>
+                            <h6 style="color: #000;" class="title">LOYALTY</h6>
                             <!-- <p>Card for the other 30% of their purchases at a rate of 1% cash back.</p> -->
                         </div>
                     </div>
@@ -170,19 +170,25 @@
                                             <img src="{{ product.imageURL }}" alt="" style="width: 100%; height: 100%;">
                                             <img src="{{ product.imageURL2 }}" alt="" style="width: 100%; height: 100%;">
                                         </a>
-                                        <!-- <div class="tag">
+                                        {% if product.offer %}
+                                        <div class="tag">
                                             <span>sale</span>
-                                        </div> -->
+                                        </div>
+                                        {% endif %}
                                         <div class="action-link">
                                             <div class="action-link-left">
-                                                <a data-product={{product.id}} data-action="add" class="update-cart" style="cursor: pointer;">Add to Cart</a>
+                                                {% if product.quantity <= 0 %}
+                                                <div class="action-link-left">
+                                                    <a style="cursor: default;">OUT OF STOCK</a>
+                                                </div>
+                                                {% else %}
+                                                <div class="action-link-left">
+                                                    <a data-product={{product.id}} data-action="add" class="update-cart" style="cursor: pointer;">Add to Cart</a>
+                                                </div>
+                                                {% endif %}
                                             </div>
                                             <div class="action-link-right">
-                                                <!-- <a href="#" data-bs-toggle="modal"
-                                                    data-bs-target="#modalQuickview"><i
-                                                        class="icon-magnifier"></i></a> -->
                                                 <a href=""><i class="icon-heart"></i></a>
-                                                <!-- <a href=""><i class="icon-shuffle"></i></a> -->
                                             </div>
                                         </div>
                                     </div>
@@ -198,12 +204,18 @@
                                             </ul>
                                         </div>
                                         <div class="content-right">
-                                            <span class="price">₹{{ product.price|floatformat:2 }}</span>
+                                            <span class="price">
+                                                {% if product.offer %}
+                                                <del>₹{{ product.price|floatformat:2 }}</del>
+                                                ₹{{ product.offer_price|floatformat:2 }}
+                                                {% else %}
+                                                ₹{{ product.price|floatformat:2 }}
+                                                {% endif %}
+                                            </span>
                                         </div>
-
                                     </div>
                                 </div>
-                                {% endfor %}
+                                {% endfor %}    
                                 <!-- End Product Default Single Item -->
                             </div>
                         </div>

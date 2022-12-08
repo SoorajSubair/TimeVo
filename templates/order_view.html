@@ -13,7 +13,7 @@
                 <th>Product Id</th>
                 <th>Name</th>
                 <th>Price</th>
-                <th>Cancel</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -27,6 +27,16 @@
                 </td>
               </tr>
               {% endfor %} 
+              {% for product in cancel_products %}
+              <tr style="color: aquamarine; opacity: 0.5;">
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td>₹{{ product.price|floatformat:2 }}</td>
+                <td>
+                    <a type="button" class="btn btn-light btn-fw" style="min-width: 100%; line-height: 2; vertical-align: auto; cursor: not-allowed;">Canceled</a>
+                </td>
+              </tr>
+              {% endfor %} 
             </tbody>
           </table>
         </div>
@@ -34,6 +44,60 @@
     </div>
   </div>
 </div>
+
+<div class="card">
+  <h4 class="card-title col-12" style="text-align: center; font-size: 1.5rem; margin-top: 20px;">ORDER DETAILS</h4>
+
+  {% if order.get_cart_items > 0 %}
+  <div class="d-flex mx-5 ">
+    <div class="  p-2 font-weight-bold"><h4>Order Items</h4></div>
+    <div class="p-2 font-weight-bold"><h4>{{order.get_cart_items}}</h4></div>
+  </div>
+  {% endif %}
+  <div class="d-flex mx-5 ">
+    <div class="  p-2 font-weight-bold"><h4>Cancel Items</h4></div>
+    <div class="p-2 font-weight-bold"><h4>{{order.get_canceled_items}}</h4></div>
+  </div>
+  <div class="d-flex mx-5 ">
+    <div class="  p-2 font-weight-bold"><h4>Payment Method</h4></div>
+    <div class="p-2 font-weight-bold"><h4>{{order.payment}}</h4></div>
+  </div>
+  {% if order.get_cart_items > 0 %}
+  <div class="d-flex mx-5 ">
+    <div class="  p-2 font-weight-bold"><h4>Bag Amount</h4></div>
+    <div class="p-2 font-weight-bold"><h4>₹{{order.get_cart_total|floatformat:2}}</h4></div>
+  </div>
+  {% endif %}
+  <div class="d-flex mx-5 ">
+    <div class="  p-2 font-weight-bold"><h4>canceled Amount</h4></div>
+    <div class="p-2 font-weight-bold"><h4>₹{{order.get_canceled_total|floatformat:2}}</h4></div>
+  </div>
+  {% if order.order_coupon %}
+  <div class="d-flex mx-5 ">
+    <div class="  p-2 font-weight-bold"><h4>Bag Discount</h4></div>
+    <div class="p-2 font-weight-bold"><h4>₹{{order.offer|floatformat:2}}</h4></div>
+  </div>
+  <div class="d-flex mx-5 ">
+    <div class="  p-2 font-weight-bold"><h4>Total Amount</h4></div>
+    <div class="p-2 font-weight-bold"><h4>₹{{order.total|floatformat:2}}</h4></div>
+  </div>
+  {% else %}
+  {% if order.get_cart_items > 0 %}
+  <div class="d-flex mx-5 ">
+    <div class="  p-2 font-weight-bold"><h4>Total Amount</h4></div>
+    <div class="p-2 font-weight-bold"><h4>₹{{order.get_cart_total|floatformat:2}}</h4></div>
+  </div>
+  {% endif %}
+  {% endif %}
+
+
+
+
+
+</div>
+ 
+
+
 
 <script>
 

@@ -21,9 +21,11 @@ $(document).ready(function() {
         ],
         "order":false,
         "bLengthChange":false,
+        "pagingType": "full",
         "dom":'<"top">ct<"top"p><"clear">'
     });
     $("#filterbox2").keyup(function(){
         dataTable.search(this.value).draw();
     });
 } );
+

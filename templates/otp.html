@@ -1,6 +1,9 @@
 {% extends 'user_base.html' %}
 {% load static %}
 {% block content %}
+<div id="content-wrapper" class="d-flex flex-column">
+    {% include 'messages.html' %}
+</div>
 <div class="breadcrumb-section breadcrumb-bg-color--golden">
     <div class="breadcrumb-wrapper">
         <div class="container">

@@ -1,6 +1,12 @@
 {% extends 'user_base.html' %}
 {% load static %}
 {% block content %}
+<style>
+    .address-bar:hover{
+        background-color: #c9e1ff7a;
+    }
+
+</style>
    <!-- ...:::: Start Breadcrumb Section:::... -->
     <div class="breadcrumb-section breadcrumb-bg-color--golden">
         <div class="breadcrumb-wrapper">
@@ -32,10 +38,45 @@
             <div class="checkout_form" data-aos="fade-up" data-aos-delay="400">
                 <div class="row">
                     <div class="col-lg-6 col-md-6 mt-3">
-                        <form id="form">
+                        <h3 id="choose-address">Choose Shipping Address</h3>
+                            {% for address in address %}
+                            <a onclick="selectedAddress('#{{ address.id }}','{{address.id}}')" class="address-select" style="cursor: pointer;">   
+                            <div id="{{ address.id }}" class="address-bar address-sel mt-2 col-12 pt-3 pl-3 border border-dark" >
+                            <div class="d-flex">
+                                <p class="badge text-uppercase bg-light text-wrap text-secondary mr-auto">home</p>
+                                </div>
+                                <p class="ml-2 text-dark" style="font-size: 15px; font-weight: 900;">{{ address.name }}<span class="ml-3">{{ address.phone }}</span></p>
+                                <address class="ml-2 text-dark">
+                                    {{ address.address }}, {{ address.appartment_no }}, {{ address.city }}, {{ address.state }}
+                                    <br>
+                                    <span style="font-weight: 900;">{{ address.zipcode}}</span>
+                                </address>
+                            </div>
+                            </a>
+                            {% endfor %}
+                            <hr id="hr">
+                            <button onclick="newAddress()" id="add_address" class="btn btn-md btn-black-default-hover mt-2" style="width: 100%;" data-bs-toggle="collapse" data-bs-target="#checkout_login"
+                            aria-expanded="true">+ Add New Address</button>
+                        
+                        <div id="checkout_login" class="collapse" data-parent="#checkout_login">
+                            <h3>Create Address</h3>
+                        <form id="form" action=" " method="post">
                             {% csrf_token %}
-                            <h3>Billing Details</h3>
                             <div class="row">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="default-form-box">
+                                            <label>Name <span>*</span></label>
+                                            <input type="text" name="name" value="{{address.name}}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="default-form-box">
+                                            <label>Mobile Number<span>*</span></label>
+                                            <input type="text" name="phone" value="{{address.phone}}" required>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="col-12">
                                     <div class="default-form-box">
                                         <label>Street address <span>*</span></label>
@@ -66,11 +107,52 @@
                                         <input type="text" name="zipcode" value="{{address.zipcode}}" required>
                                     </div>
                                 </div>
+                                <div class="order_button pt-3">
+                                    <button class="btn btn-md btn-black-default-hover" type="submit" name="address_create">Submit</button>
+                                </div>
                              </form>
+                             <div class="order_button pt-3" style="display: inline;">
+                                <button onclick="showAddress()" class="btn btn-md btn-secondary text-white" data-bs-toggle="collapse" data-bs-target="#checkout_login"
+                                        aria-expanded="true">Cancel</button>
+                                </div>
+                        </div>
+                    </div>
+
+                    <div class="coupon_code left mt-5" data-aos="fade-up" data-aos-delay="200">
+                        <h3>Coupon</h3>
+                        <div class="coupon_inner">
+                            <form action="" method="post">
+                            {% csrf_token %}
+                            <p>Enter your coupon code if you have one.</p>
+                            <input id="coupon" class="mb-2" placeholder="Coupon code" type="text" value="{{ code }}" name="coupon" required>
+                            <button type="submit" name="coupon_apply" class="btn btn-md btn-golden">Apply Coupon</button> 
+                            </form>
+                            {% if order.order_coupon %}
+                            <a onclick="coupon_remove('{{order.id}}')" style="display: table; text-align: right; border-bottom: none; cursor: pointer;">Remove Coupon</a>
+                            {% endif %}
+                            <div id="content-wrapper" class="d-flex flex-column">
+                                {% include 'messages.html' %}
                             </div>
+                            <a style="text-align: left; border-bottom: none; margin-bottom: 0; display: table; padding-top: 10px; cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#coupon_list"
+                            aria-expanded="true">
+                                View all Coupons
+                            </a>
+                            <div  id="coupon_list" class="collapse row" data-parent="#coupon_list">
+                                {% for coupon in coupons %}
+                                <div class="col-12">
+                                    <hr>
+                                    <h6 id="{{coupon.id}}" class="text-dark" style="font-weight: 700;">{{ coupon.code }}</h2>
+                                    <p>{{ coupon.description }}</p>
+                                    <button onclick="selected('{{coupon.id}}')" class="btn btn-sm btn-golden" data-bs-toggle="collapse" data-bs-target="#coupon_list"
+                                    aria-expanded="true">Select</button>   
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
                     </div>
                     <div class="col-lg-6 col-md-6 mt-3">
-                        
                             <h3>Your order</h3>
                             <div class="order_table table-responsive">
                                 <table>
@@ -90,17 +172,35 @@
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            <th>Cart Subtotal</th>
+                                            <th>Bag Total</th>
                                             <td>₹{{ order.get_cart_total|floatformat:2 }}</td>
                                         </tr>
+                                        {% if order.order_coupon %}
+                                        <tr>
+                                            <th>Bag Discout</th>
+                                            <td>₹{{ order.offer|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        <!-- {% if wallet > 0 %}
+                                        <tr>
+                                            <th>Wallet Balance</th>
+                                            <td>₹{{ wallet|floatformat:2 }}<br>
+                                                <a style="text-decoration: underline;" href="">Redeem</a>
+                                            </td>
+                                        </tr>
+                                        {% endif %} -->
                                         <tr class="order_total">
                                             <th>Order Total</th>
+                                            {% if order.order_coupon or order.wallet %}
+                                            <td><strong id="total">₹{{ order.total|floatformat:2 }}</strong></td>
+                                            {% else %}
                                             <td><strong id="total">₹{{ order.get_cart_total|floatformat:2 }}</strong></td>
+                                            {% endif %}
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
-                            <div class="payment_user">
+                            <div class="payment_user d-none">
                                 <div class="order_button pt-3">
                                     <h4 style="color: #000;">Choose You Payment Method</h4>
                                     <button id="make-payment" class="btn btn-md btn-black-default-hover mt-2" style="width: 100%;" type="submit">Cash On Delivery</button>
@@ -115,10 +215,47 @@
         </div>
     </div><!-- ...:::: End Checkout Section:::... -->
 
+    
+    <script>
+        
+        function selectedAddress(id, shipping){
+            $('.address-sel').removeClass('border-success bg-light border-4');
+            $('.address-sel').addClass('border-dark');
+            $(id).removeClass('border-dark');
+            $(id).addClass('border-success bg-light border-4');
+            $('.payment_user').removeClass('d-none');
+            submitAddress(shipping)  
+        }
+
+        function newAddress(){
+            $('#add_address').addClass('d-none');
+            $('.address-sel').addClass('d-none');
+            $('#choose-address').addClass('d-none');
+            $('#hr').addClass('d-none');
+            $('.payment_user').addClass('d-none');
+            
+        }
+        function showAddress(){
+            $('#add_address').removeClass('d-none');
+            $('.address-sel').removeClass('d-none');
+            $('#choose-address').removeClass('d-none');
+            $('#hr').removeClass('d-none');
+            $('.address-sel').removeClass('border-success bg-light border-4');
+            $('.address-sel').addClass('border-dark');
+            
+        }
+    </script>
+
     <script src="https://www.paypal.com/sdk/js?client-id=Aa63fzrSHaqslrcCXiPoD5LaCiI5Won0iZx2cv5wZ0yxr7mkAih8zmbvALFo1IIS0Spw3Ox6tsCwqwlI&currency=USD"></script>
+    
+   
 
 <script>
-    var total = '{{order.get_cart_total}}'
+    window.onload = function(){
+    var total = '{{order.total}}'
+    if(total == 'None'){
+        var total = '{{order.get_cart_total}}'
+    }
     var paypalMethod = 'Paypal'
     // Render the PayPal button into #paypal-button-container
     paypal.Buttons({
@@ -152,12 +289,17 @@
 
 
     }).render('#paypal-button-container');
+}
 </script>
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
-    
+
+    var total = '{{order.total}}'
+    if(total == 'None'){
+        var total = '{{order.get_cart_total}}'
+    }
     var razropayMethod = 'Razropay'
      
     var options = {
@@ -193,7 +335,13 @@
 </script>
 
 <script>
-    var form = document.getElementById('form')
+    function submitAddress(id){
+        window.shippingId = id
+    }
+    var total = '{{order.total}}'
+    if(total == 'None'){
+        var total = '{{order.get_cart_total}}'
+    }
     csrftoken = form.getElementsByTagName("input")[0].value
     var cash = 'Cash'
     
@@ -204,15 +352,9 @@
     function submitFormData(method){
         console.log('payment button clicked')
         console.log('{{payment.amount}}')
-        if (method == 'Razorpay'){
-            var userFormData = {
-                'fname': null,
-                'lname': null,
-                'email': null,
-                'phone': null,
-                'total': '{{payment.amount}}',
-                }
-        }else{
+
+            var shippingId = window.shippingId
+        
             var userFormData = {
                 'fname': null,
                 'lname': null,
@@ -220,28 +362,6 @@
                 'phone': null,
                 'total': total,
                 }
-        }
-
-        var shippingInfo = {
-            'address': null,
-            'appartment': null,
-            'city': null,
-            'state': null,
-            'zipcode': null,    
-        }
-
-            shippingInfo.address= form.street.value
-            shippingInfo.appartment= form.appartment.value
-            shippingInfo.city= form.city.value
-            shippingInfo.state= form.state.value
-            shippingInfo.zipcode= form.zipcode.value
-
-        if (user == 'AnonymousUser'){
-            userFormData.fname= form.fname.value
-            userFormData.lname= form.lname.value
-            userFormData.email= form.email.value
-            userFormData.phone= form.phone.value
-        }
 
         var url = 'process_order'
         fetch(url,{
@@ -250,7 +370,7 @@
                 'content-Type':'application/json',
                 'X-CSRFToken':csrftoken,
             },
-            body:JSON.stringify({'form':userFormData, 'shipping': shippingInfo, 'method': method})  
+            body:JSON.stringify({'form':userFormData, 'shipping': shippingId, 'method': method})  
         })
         .then((response) => response.json())
         .then((data) =>{
@@ -265,6 +385,11 @@
                 document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
                 window.location.href = "{% url 'checkout' %}"
                 }
+            else if (data == 'not completed'){
+                cart = {}
+                document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
+                window.location.href = "{% url 'checkout' %}"
+                }
             else {
                 cart = {}
                 document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
@@ -274,5 +399,39 @@
     }
 
 </script>
+
+<script>
+    if ( window.history.replaceState ) {
+        window.history.replaceState( null, null, window.location.href );
+    }
+</script>
+
+
+<script>
+    function selected(id){
+        var coupon = document.getElementById(id).innerHTML
+        document.getElementById('coupon').value = coupon
+    }
+</script>
+
+<script>
+    function coupon_remove(id){
+        var id = id
+        $.ajax({
+            type: "GET",
+            data: {
+                "orderId": id,
+            },
+
+            url : "coupon_delete",
+            success: function(response){
+                document.getElementById('coupon').value = ''
+                location.reload()
+                
+            }
+        });
+    }
+</script>
+
 
 {% endblock content %}

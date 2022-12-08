@@ -1,0 +1,107 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.2/css/buttons.dataTables.min.css">
+<style>
+    input{
+    color: white !important;
+    font-size: 1rem !important;
+    }
+    th{
+        text-align: center !important;
+    }
+</style>
+
+
+
+<div class="row">
+    <div class="col-md-12 main-datatable">
+        <div class="card_body">
+            <div class="row d-flex">
+            <div class="col-12  mt-3" style="text-align: center;">
+                    <h6 style="font-size: large;">Sales Report</h6>
+            </div> 
+        </div>
+            <!-- <div class="overflow-x"> -->
+                <div class="table-responsive">
+                <table  id="filtertable7" class="table  dataTable no-footer " style="color:#fff; text-align: center;" >
+                    <thead>
+                        <tr>
+                            <th style="min-width:50px;color: #fff;">Order ID</th>
+                            <th style="min-width:100px;">Date</th>
+                            <th style="min-width:150px;">Customer</th>
+                            <th style="min-width:150px;">Product</th>
+                            <th style="min-width:150px;">Quantity</th>
+                            <th style="min-width:150px;">Coupon</th>
+                            <th style="min-width:150px;">Price</th>
+                            <th style="min-width:150px;">Payment</th>
+                            <th style="min-width:150px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                            <tr>
+                                <td>{{ sale.order.id }}</td>
+                                <td>{{ sale.date }}</td>
+                                <td>{{ sale.order.user.username }}</td>
+                                <td>{{ sale.item }}</td>
+                                <td>{{ sale.quantity }}</td>
+                                {% if sale.order.order_coupon %}
+                                <td>{{ sale.order.order_coupon.code }}</td>
+                                {% else %}
+                                <td>Not Applied</td>
+                                {% endif %}
+                                <td>₹{{ sale.get_total|floatformat:2 }}</td>
+                                <td>{{ sale.order.payment}}</td>
+                                <td>
+                                {% if sale.order.status == 'Order Received' %}
+                                <div style="font-size: 1rem;" class="badge badge-outline-secondary">{{ sale.order.status }}</div>
+                                {% elif sale.order.status == 'Shipped' %}
+                                <div style="font-size: 1rem;" class="badge badge-outline-primary">{{ sale.order.status }}</div>
+                                {% elif sale.order.status == 'Out for Delivery' %}
+                                <div style="font-size: 1rem;" class="badge badge-outline-warning">{{ sale.order.status }}</div>
+                                {% elif sale.order.status == 'Delivered' %}
+                                <div style="font-size: 1rem;" class="badge badge-outline-success">{{ sale.order.status }}</div>
+                                {% elif sale.order.status == 'Order Cancel' %}
+                                <div style="font-size: 1rem;" class="badge badge-outline-danger">{{ sale.order.status }}</div>
+                                {% endif %}
+                                </td>
+                            </tr>  
+                            {% endfor %}     
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+<!-- </div> -->
+</div>
+
+<!-- <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script> -->
+
+{% endblock %}
+{% block js %}
+<script src="https://cdn.datatables.net/buttons/2.3.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.print.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#filtertable7').DataTable( {
+            dom: 'Bfrtip',
+            buttons: [
+                { extend: 'copy', className: 'btn-primary' },
+                { extend: 'csv', className: 'btn-primary' },
+                { extend: 'excel', className: 'btn-primary' },
+                { extend: 'pdf', className: 'btn-primary' },
+                { extend: 'print', className: 'btn-primary' },
+            ]
+        } );
+    } );
+</script>
+{% endblock %}

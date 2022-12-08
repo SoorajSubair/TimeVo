@@ -42,14 +42,16 @@ def cartData(request):
     if request.user.is_authenticated:
         user = request.user
         order, created = Order.objects.get_or_create(user=user, complete=False)
-        address, created = ShippingAddress.objects.get_or_create(user=user) 
-        items = order.orderitem_set.all()
+        wallet, created = Wallet.objects.get_or_create(user = user)
+        address = ShippingAddress.objects.filter(user=user) 
+        items = order.orderitem_set.all().order_by('id')
         cartItems = order.get_cart_items
     else:
         address = []
+        wallet = []
         cookieData = cookieCart(request)
         cartItems = cookieData['cartItems']
         order = cookieData['order']
         items = cookieData['items']
 
-    return {'cartItems': cartItems, 'order': order, 'items': items, "address": address}
+    return {'cartItems': cartItems, 'order': order, 'items': items, "address": address, "wallet": wallet}

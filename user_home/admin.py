@@ -14,5 +14,12 @@ admin.site.register(CaseShape)
 admin.site.register(StrapType)
 admin.site.register(ExtraImages)
 admin.site.register(SalesReport)
+admin.site.register(Coupon)
+admin.site.register(CancelItem)
+admin.site.register(ProductOffer)
+admin.site.register(CategoryOffer)
+admin.site.register(Sale)
+admin.site.register(CancelSale)
+admin.site.register(Wallet)
 
 

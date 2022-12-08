@@ -1,0 +1,52 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12 main-datatable">
+      <div class="card_body">
+          <div class="row d-flex">
+          <div class="col-12  mt-3" style="text-align: center;">
+                  <h6 style="font-size: large;">CATEGORY OFFERS</h6>
+          </div> 
+      </div>
+          <div class="row d-flex">
+              <div class="col-4 createSegment"> 
+               <a class="btn dim_button create_new" href="{% url 'c_offer_create' %}"> <span class="glyphicon glyphicon-plus"></span> Create New</a>
+              </div>
+              <div class="col-8 add_flex">
+                  <div class="form-group searchInput">
+                      <label for="email">Search:</label>
+                      <input type="search" class="form-control" id="filterbox6" placeholder=" ">
+                  </div>
+              </div> 
+          </div>
+          <!-- <div class="overflow-x"> -->
+              <div class="table-responsive">
+              <table  id="filtertable6" class="table  dataTable no-footer " style="color:#fff; text-align: center;" >
+                  <thead>
+                      <tr>
+                          <th style="min-width:50px;color: #fff;">ID</th>
+                          <th style="min-width:150px;">Name</th>
+                          <th style="min-width:150px;">Offer %</th>
+                          <th style="min-width:150px;">Action</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                    {%  for offer in offers %}
+                          <tr>
+                              <td>{{ offer.id }}</td>
+                              <td>{{ offer.category.name }}</td>
+                              <td>{{ offer.offer}} %</td>
+                              <td>
+                                  <a href="{% url 'c_offer_edit' offer.id %}" class=" btn btn-primary " style="font-size: 1.2 rem; line-height: 2;">Edit</a>
+                                  <a onclick=deleted(event) href="{% url 'c_offer_delete' offer.id %}" class="mdi mdi-delete btn-icon-prepend btn btn-danger btn-icon-text" style="font-size: 1.6rem;"></a>
+                              </td>
+                          </tr>  
+                      {% endfor %}      
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
+  </div>
+{% endblock %}

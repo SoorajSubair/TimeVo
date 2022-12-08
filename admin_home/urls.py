@@ -21,5 +21,15 @@ urlpatterns = [
     path('status_update', views.status_update, name='status_update'),
     path('order_view/<int:id>', views.order_view, name='order_view'),
     path('admin_orderItem_delete/<int:p_id>/<int:o_id>', views.admin_orderItem_delete, name='admin_orderItem_delete'),
+    path('product_offer', views.product_offer, name='product_offer'),
+    path('p_offer_create', views.p_offer_create, name='p_offer_create'),
+    path('p_offer_edit/<int:id>', views.p_offer_edit, name='p_offer_edit'),
+    path('p_offer_delete/<int:id>', views.p_offer_delete, name='p_offer_delete'),
+    path('category_offer', views.category_offer, name='category_offer'),
+    path('c_offer_create', views.c_offer_create, name='c_offer_create'),
+    path('c_offer_edit/<int:id>', views.c_offer_edit, name='c_offer_edit'),
+    path('c_offer_delete/<int:id>', views.c_offer_delete, name='c_offer_delete'),
+    path('sales_report', views.sales_report, name='sales_report'),
+    path('cancel_sale_report', views.cancel_sale_report, name='cancel_sale_report'),
 
 ]

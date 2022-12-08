@@ -20,6 +20,7 @@ $(document).ready(function() {
         ],
         "order":false,
         "bLengthChange":false,
+        "pagingType": "full",
         "dom":'<"top">ct<"top"p><"clear">'
     });
     $("#filterbox").keyup(function(){

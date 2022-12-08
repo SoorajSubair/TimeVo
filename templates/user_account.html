@@ -21,7 +21,7 @@
     }
     
     #uploadBtn{
-        height: 40px;
+        height: 85%;
         width: 100%;
         position: absolute;
         bottom: 0;
@@ -38,6 +38,10 @@
     }
 </style>
 <!-- ...:::: Start Breadcrumb Section:::... -->
+<div id="content-wrapper" class="d-flex flex-column">
+    {% include 'messages.html' %}
+</div>
+
 <div class="breadcrumb-section breadcrumb-bg-color--golden">
     <div class="breadcrumb-wrapper">
         <div class="container">
@@ -71,8 +75,9 @@
                         <li><a href="#address" data-bs-toggle="tab"
                                 class="nav-link btn btn-block btn-md btn-black-default-hover">Addresses</a></li>
                         <li><a href="#account-details" data-bs-toggle="tab"
-                                class="nav-link btn btn-block btn-md btn-black-default-hover">My Profile</a>
-                        </li>
+                                class="nav-link btn btn-block btn-md btn-black-default-hover">My Profile</a></li>
+                        <li><a href="#wallet" data-bs-toggle="tab"
+                            class="nav-link btn btn-block btn-md btn-black-default-hover">My Wallet</a></li>
                     </ul>
                 </div>
             </div>
@@ -99,7 +104,15 @@
                                         <td>{{orders.id}}</td>
                                         <td>{{orders.date_ordered}}</td>
                                         <td><span class="success">{{ orders.status }}</span></td>
+                                        {% if orders.cancelled %}
+                                        <td>₹{{orders.get_canceled_total|floatformat:2}} for {{orders.get_canceled_items}} item </td>
+                                        {% else %}
+                                        {% if orders.order_coupon%}
+                                        <td>₹{{orders.total|floatformat:2}} for {{orders.get_cart_items}} item </td>
+                                        {% else %}
                                         <td>₹{{orders.get_cart_total|floatformat:2}} for {{orders.get_cart_items}} item </td>
+                                        {% endif %}
+                                        {% endif %}
                                         <td><a href="{% url 'order_details' orders.id %}" class="view">view</a></td>
                                     </tr>
                                     {% endif %}
@@ -109,11 +122,120 @@
                         </div>
                     </div>
                     <div class="tab-pane" id="address">
-                        <p>The following addresses will be used on the checkout page by default.</p>
-                        <h5 style="color: #000;" class="billing-address">Billing address</h5>
+                        <div class="container">
+                        <div class="row">
+                            <div onclick="hiddenAddress()" class="col-12 pt-3 pl-3 border border-dark" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#checkout_login"
+                            aria-expanded="true">
+                                <p style="font-size: 16px; font-weight: 900;"><span class="mr-3">+</span>ADD NEW ADDRESS</p>
+                            </div>
+                        </div>
+
+                        <div id="checkout_login" class="collapse" data-parent="#checkout_login">
+                            <div class="row">
+                                <form action="{% url 'address_create' %}" method="post" >
+                                    {% csrf_token %}   
+                                <div class="row">
+                                <div class="col-6">
+                                    <div class="default-form-box">
+                                        <label>Name <span>*</span></label>
+                                        <input type="text" name="name" value="{{address.name}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="default-form-box">
+                                        <label>Mobile Number<span>*</span></label>
+                                        <input type="text" name="phone" value="{{address.phone}}" required>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <label>Street address <span>*</span></label>
+                                        <input type="text" name="street" value="{{address.address}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <input placeholder="Apartment, suite, unit etc. (optional)" type="text" value="{{address.appartment_no}}" name="apartment">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <label>Town / City <span>*</span></label>
+                                        <input type="text" name="city" value="{{address.city}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <label>State<span>*</span></label>
+                                        <input type="text" name="state" value="{{address.state}}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="default-form-box">
+                                        <label>Zip Code <span>*</span></label>
+                                        <input type="text" name="zipcode" value="{{address.zipcode}}" required>
+                                    </div>
+                                </div>
+                                <div class="order_button pt-3">
+                                    <button class="btn btn-md btn-black-default-hover" type="submit">Create</button>
+                                </div>
+                            </form>
+                            <div class="order_button pt-3" style="display: inline;">
+                            <button onclick="showAddress()" class="btn btn-md btn-secondary text-white" data-bs-toggle="collapse" data-bs-target="#checkout_login"
+                                    aria-expanded="true">Cancel</button>
+                            </div>
+                            </div>
+                        </div>
+
+                        {% for address in address %}
+                        <div class="row mt-5">
+                            <div id="{{ address.id }}" class="address-bar col-12 pt-3 pl-3 border border-dark" >
+                            <div class="d-flex">
+                                <p class="badge text-uppercase bg-light text-wrap text-secondary mr-auto">home</p>
+                                <div class="dropdown d-inline-flex" >
+                                    <a class=" dropdown-toggle " role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                    </a>
+                                  
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                      <li><a onclick="hiddenAddress()" class="dropdown-item" data-bs-toggle="collapse" data-bs-target="#checkout_login{{ address.id }}"
+                                        aria-expanded="true" style="cursor: pointer;">Edit</a></li>
+                                      <li><a onclick=address_delete(event) href="{% url 'address_delete' address.id %}" class="dropdown-item" style="cursor: pointer;">Delete</a></li>
+                                    </ul>
+                                  </div>
+                                </div>
+                                <p class="ml-2 text-dark" style="font-size: 15px; font-weight: 900;">{{ address.name }}<span class="ml-3">{{ address.phone }}</span></p>
+                                <address class="ml-2 text-dark">
+                                    {{ address.address }}, {{ address.appartment_no }}, {{ address.city }}, {{ address.state }}
+                                    <br>
+                                    <span style="font-weight: 900;">{{ address.zipcode}}</span>
+                                </address>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        </div>
+                        <!-- <p>The following addresses will be used on the checkout page by default.</p>
+                        <h5 style="color: #000;" class="billing-address">Billing address</h5> -->
+                        {% for address in address %}
+                        <div id="checkout_login{{ address.id }}" class="collapse" data-parent="#checkout_login{{ address.id }}">
                         <div class="row">
                             <form action="" method="post">
                                 {% csrf_token %}
+                                <input type="hidden" name="id" value="{{address.id}}" required>
+                            <div class="row">
+                            <div class="col-6">
+                                <div class="default-form-box">
+                                    <label>Name <span>*</span></label>
+                                    <input type="text" name="name" value="{{address.name}}" required>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="default-form-box">
+                                    <label>Mobile Number<span>*</span></label>
+                                    <input type="text" name="phone" value="{{address.phone}}" required>
+                                </div>
+                            </div>
+                            </div>
                             <div class="col-12">
                                 <div class="default-form-box">
                                     <label>Street address <span>*</span></label>
@@ -147,7 +269,13 @@
                                 <button class="btn btn-md btn-black-default-hover" type="submit">Update Address</button>
                             </div>
                         </form>
+                        <div class="order_button pt-3" style="display: inline;">
+                        <button onclick="showAddress()" class="btn btn-md btn-secondary text-white" data-bs-toggle="collapse" data-bs-target="#checkout_login{{ address.id }}"
+                                aria-expanded="true">Cancel</button>
                         </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                     </div>
                     <div class="tab-pane fade" id="account-details">
                         <h3 style="color:#000;">Account details </h3>
@@ -158,7 +286,11 @@
                                         {% csrf_token %}
                                         <div class="default-form-box mb-20 mt-2">
                                         <div class="profile-pic-div">
+                                            {% if request.user.image %}
                                             <img src="{{request.user.imageURL}}" id="photo">
+                                            {% else %}
+                                            <img src="{% static 'user_home/assets/images/user/profile_default.jpg' %}" id="photo">
+                                            {% endif %}
                                             <input type="file" name="profile_image" id="file">
                                             <label for="file" id="uploadBtn">Choose Photo</label>
                                         </div>
@@ -193,6 +325,11 @@
                             </div>
                         </div>
                     </div>
+                    <div class="tab-pane fade show " id="wallet">
+                        <h4 style="color: #000;">Wallet</h4>
+                        <h5 style="color: #000;">YOUR BALANCE</h5>
+                        <p style="font-size: x-large; color: #b19361;">₹{{wallet.amount|floatformat:2}}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -217,7 +354,7 @@ imgDiv.addEventListener('mouseenter', function(){
 //if we hover out from img div
 
 imgDiv.addEventListener('mouseleave', function(){
-    uploadBtn.style.display = "none";
+   uploadBtn.style.display = "none";
 });
 
 //lets work for image showing functionality when we choose an image to upload
@@ -241,5 +378,37 @@ file.addEventListener('change', function(){
         
     }
 });
+</script>
+
+<script>
+    function hiddenAddress(){
+        $('.address-bar').addClass('d-none');
+    }
+    function showAddress(){
+        $('.address-bar').removeClass('d-none');
+    }
+
+    function address_delete(event) {
+        event.preventDefault();
+        var link = event.currentTarget.href;
+        swal({
+          title: "Are you sure?",
+          text: "This address will removed permanently!",
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+          .then((willDelete) => {
+            if (willDelete) {
+              swal("Address removed Successfully!", {
+                icon: "success",
+              }).then(() => {
+                window.location = link;
+              });
+            } else {
+              /* swal("Your imaginary file is safe!");*/
+            }
+          });
+      }
 </script>
 {% endblock content %}

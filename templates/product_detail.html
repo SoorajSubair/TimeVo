@@ -99,7 +99,14 @@
                             </ul>
                             <a href="#" class="customer-review ml-2">(customer review )</a>
                         </div>
-                        <div class="price">₹{{ product.price|floatformat:2 }}</div>
+                        <div class="price">
+                            {% if product.offer %}
+                            <del style="opacity: 0.7;">₹{{ product.price|floatformat:2 }}</del>
+                            ₹{{ product.offer_price|floatformat:2 }}
+                            {% else %}
+                            ₹{{ product.price|floatformat:2 }}
+                            {% endif %}
+                        </div>
                         <p>{{ product.description }}</p>
                     </div> <!-- End  Product Details Text Area-->
                     <!-- Start Product Variable Area -->
@@ -110,23 +117,21 @@
                             {% if product.quantity > 5 %}
                             <div class="product-stock"> <span class="product-stock-in mr-1"><i
                                         class="ion-checkmark-circled"></i></span>IN STOCK</div>
-                            {% else %}
+                            {% elif product.quantity > 0 and product.quantity < 6 %}
                             <div class="product-stock text-danger">HURRY ONLY {{ product.quantity }} LEFT</div>
+                            {% else %}
+                            <div class="product-stock text-danger">OUT OF STOCK</div>
                             {% endif %}
                         </div>
                         <!-- Product Variable Single Item -->
+                        {% if product.quantity <= 0 %}
+                        {% else %}
                         <div class="d-flex align-items-center ">
-                            <!-- <div class="variable-single-item ">
-                                <span>Quantity</span>
-                                <div class="product-variable-quantity">
-                                    <input min="1" max="100" value="1" type="number">
-                                </div>
-                            </div> -->
-
                             <div class="product-add-to-cart-btn">
                                 <a data-product={{product.id}} data-action="add" class="update-cart" style="cursor: pointer;">+Add to Cart</a>   
                             </div>
                         </div>
+                        {% endif %}
                         <!-- Start  Product Details Meta Area-->
                         <div class="product-details-meta mb-20 mt-2">
                             <a href="" class="icon-space-right"><i class="icon-heart"></i>Add to
@@ -436,7 +441,14 @@
                                             </ul>
                                         </div>
                                         <div class="content-right">
-                                            <span class="price">₹{{ product.price|floatformat:2 }}</span>
+                                            <span class="price">
+                                                {% if product.offer %}
+                                                <del>₹{{ product.price|floatformat:2 }}</del>
+                                                ₹{{ product.offer_price|floatformat:2 }}
+                                                {% else %}
+                                                ₹{{ product.price|floatformat:2 }}
+                                                {% endif %}
+                                            </span>
                                         </div>
 
                                     </div>

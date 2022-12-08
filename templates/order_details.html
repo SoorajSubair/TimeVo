@@ -36,26 +36,6 @@
                             <!-- Start Product Default Single Item -->
                             <div class="blog-list blog-list-single-item blog-color--golden" data-aos="fade-up"
                                 data-aos-delay="0">
-                                {% if order.status == 'Order Cancel' %}
-                                <div class="empty-cart-section section-fluid">
-                                    <div class="emptycart-wrapper">
-                                        <div class="container">
-                                            <div class="row">
-                                                <div class="col-12 col-md-10 offset-md-1 col-xl-6 offset-xl-3">
-                                                    <div class="emptycart-content text-center">
-                                                        <div class="image">
-                                                            <img class="img-fluid" src="{% static 'user_home/assets/images/emprt-cart/empty-cart.png' %}" alt="">
-                                                        </div>
-                                                        <h4 class="title">Sorry your order has been cancelled</h4>
-                                                        <h6 class="sub-title">Don't Worry, You can order again!</h6>
-                                                        <a href="{% url 'user_home' %}" class="btn btn-lg btn-golden">Continue Shopping</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% else %}
                                 {% for product in products %}
                                 <div class="row mt-3">
                                     <div class="col-xl-4 col-md-5" style="height: 350px;">
@@ -75,37 +55,98 @@
                                                 <li class="mt-2" style="font-size: medium;">Price : <a class="date">₹{{product.price}}</a></li>
                                                 <li class="mt-2" style="font-size: medium;">Status : <a class="date">{{ order.status }}</a></li>
                                             </ul>
+                                            {% if order.status == 'Delivered' %}
+                                            <div class="product-add-to-cart-btn mt-5">
+                                                <a onclick=item_return(event) href="{% url 'orderItem_return' product.id order.id %}" style="cursor: pointer;">Return Item</a>   
+                                            </div>
+                                            {% else %}
                                             <div class="product-add-to-cart-btn mt-5">
                                                 <a onclick=item_delete(event) href="{% url 'orderItem_delete' product.id order.id %}" style="cursor: pointer;">Cancel Item</a>   
                                             </div>
-                                            
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                {% endfor %}
+                                {% for product in cancel_products %}
+                                <div class="row mt-3">
+                                    <div class="col-xl-4 col-md-5" style="height: 350px;">
+                                        <div class="image-box" style="height: 100%;">
+                                            <a href="{% url 'details' product.id %}" class="image-link">
+                                                <img  style="height: 100%; opacity: 0.5;" class="img-fluid"
+                                                    src="{{product.imageURL}}" alt="">
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-8 col-md-7">
+                                        <div class="content">
+                                            <h6 class="title" style="opacity: 0.5;"><a href="">{{ product.name }}</a></h6>
+                                            <ul >
+                                                <li>ORDER PLACED ON : <a class="date">{{order.date_ordered}}</a></li>
+                                                
+                                                <li class="mt-2" style="font-size: medium;">Price : <a class="date">₹{{product.price}}</a></li>
+                                                <li class="mt-2" style="font-size: medium;">Status : <a class="date">Canceled</a></li>
+                                            </ul>    
                                         </div>
                                     </div>
                                 </div>
                                 <hr>
                                 {% endfor %}
                                 <div class="row mt-3">
-                                    
                                         <h6 style="color: #000;text-align: center;
                                         font-size: x-large; font-weight: 600;">DETAILS</h6>
 
-                                    <div class="col-xl-6" style="padding-top: 20px;">
+                                    <div class="col-6" style="padding-top: 20px;">
                                         <ul >
-                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">Total Items</li>
+                                            {% if order.get_cart_items > 0 %}
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">Order Items</li>
+                                            {% endif %}
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">Cancel Items</li>
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">Payment Method</li>
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">Transaction Id</li>
+                                            {% if order.get_cart_items > 0 %}
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">Bag Amount</li>
+                                            {% endif %}
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">canceled Amount</li>
+                                            {% if order.order_coupon %}
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">Bag Discount</li>
+                                            {% endif %}
+                                            {% if order.get_cart_items > 0 %}
                                             <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">Total Amount</li>
+                                            {% endif %}
                                         </ul>
                                     </div>
-                                    <div class="col-xl-6" style="padding-top: 20px;">
+                                    <div class="col-6" style="padding-top: 20px;">
                                         <ul >
+                                            {% if order.get_cart_items > 0 %}
                                             <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">{{order.get_cart_items}}</li>
+                                            {% endif %}
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">{{order.get_canceled_items}}</li>
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">{{order.payment}}</li>
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">{{order.transaction_id}}</li>
+                                            {% if order.get_cart_items > 0 %}
                                             <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.get_cart_total|floatformat:2}}</li>
+                                            {% endif %}
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.get_canceled_total|floatformat:2}}</li>
+                                            {% if order.order_coupon %}
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.offer|floatformat:2}}</li>
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.total|floatformat:2}}</li>
+                                            {% else %}
+                                            {% if order.get_cart_items > 0 %}
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.get_cart_total|floatformat:2}}</li>
+                                            {% endif %}
+                                            {% endif %}
+                                            {% if order.cancelled or order.status == 'Delivered' %}
+                                            
+                                            {% else %}
                                             <div class="product-add-to-cart-btn mt-5" style="text-align: center;">
                                                 <a onclick=order_delete(event) href="{% url 'order_delete' order.id %}" style="cursor: pointer;">Cancel Order</a>   
                                             </div>
+                                            {% endif %}
                                         </ul>
                                     </div>
                                 </div>
-                                {% endif %}
                             </div>
                             <!-- End Product Default Single Item -->
                         </div>
@@ -153,6 +194,29 @@
           .then((willDelete) => {
             if (willDelete) {
               swal("Item removed Successfully!", {
+                icon: "success",
+              }).then(() => {
+                window.location = link;
+              });
+            } else {
+              /* swal("Your imaginary file is safe!");*/
+            }
+          });
+      }
+
+      function item_return(event) {
+        event.preventDefault();
+        var link = event.currentTarget.href;
+        swal({
+          title: "Are you sure?",
+          text: "You want to return item!",
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+          .then((willDelete) => {
+            if (willDelete) {
+              swal("Refund is added to your wallet!", {
                 icon: "success",
               }).then(() => {
                 window.location = link;
