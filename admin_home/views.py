@@ -9,6 +9,7 @@ import json
 from django.db.models import Q
 import os
 import datetime
+from django.db.models import Sum
 
 # Create your views here.
 
@@ -41,8 +42,15 @@ def admin_home(request):
         all_sales =SalesReport.objects.all().order_by('-date')[:7][::-1]
         for sale in all_sales:
             sales.append(sale)
+
+        daily_sale, create = SalesReport.objects.get_or_create(date = datetime.date.today())
+        daily_amount = daily_sale.sale
+        total_revenue = SalesReport.objects.aggregate(Sum('sale'))
+        
+        cancel_items = CancelItem.objects.filter(status = 'Canceled').aggregate(Sum('quantity'))
+        return_items = CancelItem.objects.filter(status = 'Returned').aggregate(Sum('quantity'))
             
-        context = {"sales": sales}
+        context = {"sales": sales, "daily_amount": daily_amount, "total_revenue":total_revenue, "cancel_items":cancel_items,"return_items":return_items}
         return render(request,'admin_home.html', context)
 
     return redirect(administration_login)
@@ -324,7 +332,7 @@ def product_delete(request, id):
 @never_cache
 def order_manage(request):
     if 'admin_username' in request.session:
-        orders = Order.objects.all().order_by('-date_ordered')
+        orders = Order.objects.all().order_by('-id')
         status = ["Order Received", "Shipped", "Out for Delivery", "Delivered", "Order Cancel"]
         context = {"orders": orders, "status":status}
         return render(request, 'order_manage.html', context)
@@ -342,10 +350,7 @@ def status_update(request):
             if status == 'Order Cancel':
                 orderItems = OrderItem.objects.filter(order_id = orderId)
                 sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
-                if order.order_coupon:
-                    sales.sale = sales.sale - order.total
-                else:
-                    sales.sale = sales.sale - order.get_cart_total
+                sales.sale = float(sales.sale) - (float(order.get_cart_total)+float(order.wallet_amount))
                 sales.save()
 
                 for item in orderItems:
@@ -384,9 +389,10 @@ def status_update(request):
                     item.delete()
 
                 order.cancelled = True
+                order.coupon = False
                 order.order_coupon = None
-                order.offer = None
-                order.total = None
+                order.offer = 0
+                order.total = 0
               
             order.status = status
             order.save()
@@ -400,6 +406,7 @@ def order_view(request, id):
         order = Order.objects.get(id = id)
         items = OrderItem.objects.filter(order = order)
         cancel_item = CancelItem.objects.filter(order = order)
+        bag_total = float(order.get_cart_total)+float(order.offer)+float(order.wallet_amount)
         products = []
         cancel_products =[]
         for i in items:
@@ -417,18 +424,16 @@ def order_view(request, id):
         if len(items) <=0 :
             order.status = 'Order Cancel'
             order.cancelled = True
-            sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
-            if order.order_coupon:
-                sales.sale = sales.sale - order.total
-            else:
-                sales.sale = sales.sale - order.get_cart_total
+            sales, create = SalesReport.objects.get_or_create(date = order.date_ordered) 
+            sales.sale = float(sales.sale) - (float(order.get_cart_total)+float(order.wallet_amount))
             sales.save()
             order.order_coupon = None
-            order.offer = None
-            order.total = None
+            order.coupon = False
+            order.offer = 0
+            order.total = 0
             order.save()
             
-        context = {"order": order, "items": items, "products": products, "cancel_products": cancel_products}
+        context = {"order": order, "items": items, "products": products, "cancel_products": cancel_products, "bag_total": bag_total}
         return render(request, 'order_view.html', context)
 
     return redirect(administration_login)
@@ -440,8 +445,6 @@ def admin_orderItem_delete(request, p_id, o_id):
         cancel_item, create = CancelItem.objects.get_or_create(order_id = o_id, product_id = p_id, status = 'Canceled')
         order = Order.objects.get(id = o_id)
         sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
-        sales.sale = sales.sale - item.product.price
-        sales.save()
         item.quantity = (item.quantity - 1)
 
         if cancel_item.quantity == 0:
@@ -452,12 +455,14 @@ def admin_orderItem_delete(request, p_id, o_id):
 
         all_sale = Sale.objects.get(order = order, item = item.product.name)
         price = float(all_sale.get_total)/float(all_sale.quantity)
+        sales.sale = float(sales.sale) - float(price)
+        sales.save()
         cancel_sale= CancelSale.objects.create(order = order, item = item.product.name)
         cancel_sale.date = datetime.date.today() 
         cancel_sale.price = price
         cancel_sale.status = 'Canceled'
         all_sale.quantity = all_sale.quantity - 1
-
+    
         item.product.quantity = (item.product.quantity + 1)
         item.product.save()
         if item.quantity == 0:
@@ -465,31 +470,28 @@ def admin_orderItem_delete(request, p_id, o_id):
         else:
             item.save()
 
-        if order.order_coupon:
+        if order.coupon:
             coupon = order.order_coupon
-            if coupon.minimum_amount >= order.get_cart_total:
-                order.total = order.get_cart_total
+            if coupon.minimum_amount >= (float(order.get_cart_total) + float(order.offer) + float(order.wallet_amount)):
+                order.total = 0
+                order.offer = 0
+                order.coupon = False
                 order.order_coupon = None
             else:
                 discount = coupon.discount
-                order.offer = (discount/100)*float(order.get_cart_total)
+                order.offer = (discount/100)*(float(order.get_cart_total) + float(order.offer) + float(order.wallet_amount))
                 if order.offer > coupon.maximum_discount:
                     order.offer = float(coupon.maximum_discount)
-                order.total = float(order.get_cart_total) - order.offer
+                # order.total = float(order.get_cart_total) - order.offer
             order.save()
 
-        if order.payment != 'Cash':
-            user = request.user
-            wallet = Wallet.objects.get(user = user)
-            wallet.amount = float(wallet.amount) + float(price)
-            wallet.save()
-        
         if all_sale.quantity == 0:
             all_sale.delete()
         else:
             all_sale.save()
         cancel_sale.save()
 
+        
         return redirect(order_view,o_id)
 
     return redirect(administration_login)
@@ -680,18 +682,277 @@ def c_offer_delete(request, id):
     return redirect(category_offer)
 
 @never_cache
+def coupons(request):
+    coupons = Coupon.objects.all().order_by('id')
+    context = {"coupons": coupons}
+    return render(request, 'coupons.html',context)
+
+@never_cache
+def coupon_create(request):
+    if request.method == 'POST':
+        code = request.POST['code']
+        discount = request.POST['discount']
+        max_discount = request.POST['max_discount']
+        min_purchase = request.POST['min_purchase']
+        conditions = request.POST['conditions']
+        expiry = request.POST['expiry']
+        print(code)
+        if Coupon.objects.filter(code = code).exists():
+            messages.error(request, 'Coupon Code already exists!')
+            return redirect(coupon_create)
+        else:
+            coupon = Coupon.objects.create(code = code, discount = discount, maximum_discount = max_discount, minimum_amount = min_purchase, description = conditions, endDate = expiry )
+            coupon.save()
+            messages.success(request, 'Coupon created successfully')
+            return redirect(coupons)
+
+    return render(request, 'coupon_create.html')
+
+@never_cache
+def coupon_block(request, id):
+    coupon = Coupon.objects.get(id = id)
+    if coupon.is_active:
+        coupon.is_active = False
+    else:
+        coupon.is_active = True
+    
+    coupon.save()
+    return redirect(coupons)
+
+@never_cache
 def sales_report(request):
 
     order = Order.objects.filter(status = 'Order Received')
-    print(order)
-    sale = Sale.objects.all()
+    sale = Sale.objects.all().order_by('date')
     context = {"sales": sale}
+
+    if 'datefilter' in request.POST:
+        sale_date_range = []
+        start = request.POST.get("start-date",'')
+        end = request.POST.get("end-date",'')
+        format = '%Y-%m-%d'
+        try:
+            startdate = datetime.datetime.strptime(start, format).date()
+            enddate = datetime.datetime.strptime(end, format).date()
+            diff = str(enddate - startdate)
+            if diff == '0:00:00':
+                limit = int(diff.split(':')[0])
+            else:
+                limit = int(diff.split()[0])
+
+            for i in range(limit+1):
+                for j in sale:
+                    if j.date == startdate:
+                        sale_date_range.append(j)
+                    
+                startdate += datetime.timedelta(days=1)
+            
+            context = {"sales": sale_date_range}
+            return render(request, 'sales_report.html', context)
+        except:
+            return render(request, 'sales_report.html', context)
+
+    if 'monthfilter' in request.POST:
+        sale_month_range = []
+        start = request.POST.get("start-month",'')
+        end = request.POST.get("end-month",'')
+        format = '%Y-%m'
+        startmonth = datetime.datetime.strptime(start, format).date()
+        endmonth = datetime.datetime.strptime(end, format).date()
+        try:
+            try:
+                endmonth = endmonth.replace(day=31)
+            except :
+                endmonth = endmonth.replace(day=30)
+        except :
+            try:
+                endmonth = endmonth.replace(day=29)
+            except :
+                endmonth = endmonth.replace(day=28)
+
+        diff = str(endmonth - startmonth)
+        limit = int(diff.split()[0])
+        for i in range(limit+1):
+            for j in sale:
+                if j.date == startmonth:
+                    sale_month_range.append(j)
+                
+            startmonth += datetime.timedelta(days=1)
+            
+        context = {"sales": sale_month_range}
+        return render(request, 'sales_report.html', context)
+        
+    if 'yearfilter' in request.POST:
+        sale_year_range = []
+        start = request.POST.get("year", '')
+        format = '%Y-%m-%d'
+        startyear = datetime.datetime.strptime(start, format).date()
+        endyear = datetime.datetime.strptime(start, format).date()
+        endyear = endyear.replace(month=12, day=31)
+        diff = str(endyear - startyear)
+        limit = int(diff.split()[0])
+        for i in range(limit+1):
+            for j in sale:
+                if j.date == startyear:
+                    sale_year_range.append(j)
+                
+            startyear += datetime.timedelta(days=1)
+            
+        context = {"sales": sale_year_range}
+        return render(request, 'sales_report.html', context)
+
+
     return render(request, 'sales_report.html', context)
 
 @never_cache
 def cancel_sale_report(request):
 
-    sale = CancelSale.objects.all().order_by('-date')
+    sale = CancelSale.objects.all().order_by('date')
     context = {"sales": sale}
+
+    if 'datefilter' in request.POST:
+        sale_date_range = []
+        start = request.POST.get("start-date",'')
+        end = request.POST.get("end-date",'')
+        format = '%Y-%m-%d'
+        try:
+            startdate = datetime.datetime.strptime(start, format).date()
+            enddate = datetime.datetime.strptime(end, format).date()
+            diff = str(enddate - startdate)
+            if diff == '0:00:00':
+                limit = int(diff.split(':')[0])
+            else:
+                limit = int(diff.split()[0])
+
+            for i in range(limit+1):
+                for j in sale:
+                    if j.date == startdate:
+                        sale_date_range.append(j)
+                    
+                startdate += datetime.timedelta(days=1)
+            
+            context = {"sales": sale_date_range}
+            return render(request, 'cancel_sale_report.html', context)
+        except:
+            return render(request, 'cancel_sale_report.html', context)
+
+    if 'monthfilter' in request.POST:
+        sale_month_range = []
+        start = request.POST.get("start-month",'')
+        end = request.POST.get("end-month",'')
+        format = '%Y-%m'
+        startmonth = datetime.datetime.strptime(start, format).date()
+        endmonth = datetime.datetime.strptime(end, format).date()
+        try:
+            try:
+                endmonth = endmonth.replace(day=31)
+            except :
+                endmonth = endmonth.replace(day=30)
+        except :
+            try:
+                endmonth = endmonth.replace(day=29)
+            except :
+                endmonth = endmonth.replace(day=28)
+
+        diff = str(endmonth - startmonth)
+        limit = int(diff.split()[0])
+        for i in range(limit+1):
+            for j in sale:
+                if j.date == startmonth:
+                    sale_month_range.append(j)
+                
+            startmonth += datetime.timedelta(days=1)
+            
+        context = {"sales": sale_month_range}
+        return render(request, 'cancel_sale_report.html', context)
+        
+    if 'yearfilter' in request.POST:
+        sale_year_range = []
+        start = request.POST.get("year", '')
+        format = '%Y-%m-%d'
+        startyear = datetime.datetime.strptime(start, format).date()
+        endyear = datetime.datetime.strptime(start, format).date()
+        endyear = endyear.replace(month=12, day=31)
+        diff = str(endyear - startyear)
+        limit = int(diff.split()[0])
+        for i in range(limit+1):
+            for j in sale:
+                if j.date == startyear:
+                    sale_year_range.append(j)
+                
+            startyear += datetime.timedelta(days=1)
+            
+        context = {"sales": sale_year_range}
+        return render(request, 'cancel_sale_report.html', context)
+
     return render(request, 'cancel_sale_report.html', context)
+
+@never_cache
+def return_request(request):
+    requests = ReturnRequest.objects.all().order_by('-id')
+    context = {"requests": requests}
+    return render(request, 'return_request.html', context)
+    
+@never_cache
+def orderItem_return(request):
+    o_id = request.GET['o_id']
+    p_id = request.GET['p_id']
+    item = OrderItem.objects.get(order_id = o_id, product_id = p_id)
+    cancel_item, create = CancelItem.objects.get_or_create(order_id = o_id, product_id = p_id, status = 'Returned')
+    order = Order.objects.get(id = o_id)
+    sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
+    sales.sale = sales.sale - item.product.price
+    sales.save()
+    item.quantity = (item.quantity - 1)
+
+    if cancel_item.quantity == 0:
+        cancel_item.quantity = 1
+    else:
+        cancel_item.quantity = cancel_item.quantity + 1
+    cancel_item.save()
+
+    all_sale = Sale.objects.get(order = order, item = item.product.name)
+    price = float(all_sale.get_total)/float(all_sale.quantity)
+    cancel_sale= CancelSale.objects.create(order = order, item = item.product.name)
+    cancel_sale.date = datetime.date.today() 
+    cancel_sale.price = price
+    cancel_sale.status = 'Returned'
+    all_sale.quantity = all_sale.quantity - 1
+
+    item.product.quantity = (item.product.quantity + 1)
+    item.product.save()
+    if item.quantity == 0:
+        item.delete()
+    else:
+        item.save()
+
+    if order.payment != 'Cash':
+        user = request.GET['user']
+        wallet = Wallet.objects.get(user = user) 
+        wallet.amount = float(wallet.amount) + float(price)
+        wallet.save()
+
+    items = OrderItem.objects.filter(order = order)
+    if len(items) <=0 :
+        order.status = 'Order Cancel'
+        order.cancelled = True
+        sales, create = SalesReport.objects.get_or_create(date = order.date_ordered) 
+        sales.sale = float(sales.sale) - (float(order.get_cart_total)+float(order.wallet_amount))
+        sales.save()
+        order.order_coupon = None
+        order.coupon = False
+        order.offer = 0
+        order.total = 0
+        order.save()
+
+    if all_sale.quantity == 0:
+        all_sale.delete()
+    else:
+        all_sale.save()
+    cancel_sale.save()
+
+    return_id = request.GET['id']
+    return_request = ReturnRequest.objects.get(id = return_id).delete()
+
+    return JsonResponse({"message":"success"}, safe=False)
 

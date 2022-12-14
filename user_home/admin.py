@@ -21,5 +21,6 @@ admin.site.register(CategoryOffer)
 admin.site.register(Sale)
 admin.site.register(CancelSale)
 admin.site.register(Wallet)
+admin.site.register(ReturnRequest)
 
 

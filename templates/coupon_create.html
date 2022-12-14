@@ -1,0 +1,42 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+<div class="col-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Create Coupon</h4>
+        <form class="forms-sample" method="post" action="">
+            {% csrf_token %}
+          <div class="form-group" style="width: 155px;">
+            <label for="exampleInputName1">CODE</label>
+            <input type="text" name= "code" class="form-control" id="exampleInputName1"  required>
+          </div>
+          <div class="form-group" style="width: 155px;">
+            <label for="exampleInputName1">Discount (%)</label>
+            <input type="number" min="0" max="100" name= "discount" class="form-control" id="exampleInputName1"  required>
+          </div>
+          <div class="form-group" style="width: 155px;">
+            <label for="exampleInputName1">Maximum Discount</label>
+            <input type="number" min="0" name= "max_discount" class="form-control" id="exampleInputName1"  required>
+          </div>
+          <div class="form-group" style="width: 155px;">
+            <label for="exampleInputName1">Minimum Purchase</label>
+            <input type="number" min="0" name= "min_purchase" class="form-control" id="exampleInputName1"  required>
+          </div>
+          <div class="form-group">
+            <label for="exampleTextarea1">Conditions</label>
+            <input type="text" class="form-control" name="conditions" id="exampleTextarea1" rows="5" required>
+          </div>
+          <div class="form-group" style="width: 165px;">
+            <label for="exampleTextarea1">Expiry Date</label>
+            <input type="date" class="form-control" name="expiry" id="exampleTextarea1" required>
+          </div>
+          <button type="submit" class="btn btn-primary mr-2">Submit</button>
+          <a href="{% url 'coupons' %}" class="btn btn-dark">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

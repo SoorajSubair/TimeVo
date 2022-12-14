@@ -26,7 +26,7 @@
 
 <!-- ...:::: Start Blog List Section:::... -->
 <div class="blog-section">
-    <div class="container">
+    <div class="container" >
         <div class="row flex-column-reverse flex-lg-row-reverse">
             
             <div class="col-lg-12">
@@ -55,13 +55,14 @@
                                                 <li class="mt-2" style="font-size: medium;">Price : <a class="date">₹{{product.price}}</a></li>
                                                 <li class="mt-2" style="font-size: medium;">Status : <a class="date">{{ order.status }}</a></li>
                                             </ul>
-                                            {% if order.status == 'Delivered' %}
+                                            {% if order.status == 'Order Received' %}
                                             <div class="product-add-to-cart-btn mt-5">
-                                                <a onclick=item_return(event) href="{% url 'orderItem_return' product.id order.id %}" style="cursor: pointer;">Return Item</a>   
-                                            </div>
-                                            {% else %}
+                                              <a onclick=item_delete(event) href="{% url 'orderItem_delete' product.id order.id %}" style="cursor: pointer;">Cancel Item</a>   
+                                          </div>
+                                          {% else %}
                                             <div class="product-add-to-cart-btn mt-5">
-                                                <a onclick=item_delete(event) href="{% url 'orderItem_delete' product.id order.id %}" style="cursor: pointer;">Cancel Item</a>   
+                                                <a class="return_request" data-p_id = '{{product.id}}' data-o_id="{{order.id}}" data-bs-toggle="modal"
+                                                data-bs-target="#modalAddcart" style="cursor: pointer;">Return Item</a>   
                                             </div>
                                             {% endif %}
                                         </div>
@@ -69,6 +70,57 @@
                                 </div>
                                 <hr>
                                 {% endfor %}
+                                <!-- Start Modal Add cart -->
+                                <div class="modal fade" id="modalAddcart" tabindex="0" role="dialog" aria-hidden="true">
+                                    <div class="modal-dialog  modal-dialog-centered modal-xl" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-body">
+                                                <div class="container-fluid">
+                                                    <div class="row">
+                                                        <div class="col text-right">
+                                                            <button type="button" class="close modal-close" data-bs-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true"> <i class="fa fa-times"></i></span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                          <h3 class="text-dark">Please Submit Your Reason for Returning the Product</h3>
+                                                          <form id="return-form" class="mt-5" method="post">
+                                                              {% csrf_token %}
+                                                              <div class="row">
+                                                                  <div class="col-12">
+                                                                      <div class="default-form-box">
+                                                                        <input type="text" name="p_id" id="p_id" value="" hidden>
+                                                                        <input type="text" name="o_id" id="o_id" value="" hidden>
+                                                                          <label for="comment-name">Select Your Reason<span>*</span></label>
+                                                                          <select id="reason" class="form-select" aria-label="Default select example" required>
+                                                                              <option selected disabled value>Choose...</option>
+                                                                              <option value="The product is damaged">The product is damaged</option>
+                                                                              <option value="Did't Like It">Did't Like It</option>
+                                                                              <option value="No Longer Needed">No Longer Needed</option>
+                                                                              <option value="Shipped the wrong product">Shipped the wrong product</option>
+                                                                            </select>
+                                                                      </div>
+                                                                  </div>
+                                                                  <div class="col-12 mt-5">
+                                                                      <button class="btn btn-md btn-black-default-hover"
+                                                                          type="submit">Submit</button>
+                                                                  </div>
+                                                              </div>
+                                                          </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <script>
+
+                                </script>
+                                <!-- End Modal Add cart -->
                                 {% for product in cancel_products %}
                                 <div class="row mt-3">
                                     <div class="col-xl-4 col-md-5" style="height: 350px;">
@@ -126,24 +178,29 @@
                                             <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">{{order.payment}}</li>
                                             <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">{{order.transaction_id}}</li>
                                             {% if order.get_cart_items > 0 %}
-                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.get_cart_total|floatformat:2}}</li>
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{bag_total|floatformat:2}}</li>
                                             {% endif %}
                                             <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.get_canceled_total|floatformat:2}}</li>
-                                            {% if order.order_coupon %}
+                                            {% if order.coupon %}
                                             <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.offer|floatformat:2}}</li>
-                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.total|floatformat:2}}</li>
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.bill_total|floatformat:2}}</li>
                                             {% else %}
                                             {% if order.get_cart_items > 0 %}
-                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.get_cart_total|floatformat:2}}</li>
+                                            <li class="mt-2 " style="font-size: large; font-weight: 700; text-align: center;">₹{{order.bill_total|floatformat:2}}</li>
                                             {% endif %}
                                             {% endif %}
-                                            {% if order.cancelled or order.status == 'Delivered' %}
-                                            
-                                            {% else %}
+                              
+                                            {% if order.status == "Order Received" %}
                                             <div class="product-add-to-cart-btn mt-5" style="text-align: center;">
                                                 <a onclick=order_delete(event) href="{% url 'order_delete' order.id %}" style="cursor: pointer;">Cancel Order</a>   
                                             </div>
+                                            
                                             {% endif %}
+                                            {% if not order.status == "Order Cancel" %}
+                                            <div class="product-add-to-cart-btn mt-5" style="text-align: center;" >
+                                              <a href="{% url 'invoice' order.id %}" style="cursor: pointer; color: #fff;">Download Invoice</a>
+                                              {% endif %}   
+                                          </div>
                                         </ul>
                                     </div>
                                 </div>
@@ -227,4 +284,60 @@
           });
       }
 </script>
+{% endblock %}
+{% block js %}
+<script>
+  $(document).on("click", ".return_request", function () {
+    var p_id = $(this).data('p_id');
+    var o_id = $(this).data('o_id');
+    $('#p_id').val( p_id );
+    $('#o_id').val( o_id );
+});
+</script>
+
+<script>
+  if ( window.history.replaceState ) {
+      window.history.replaceState( null, null, window.location.href );
+  }
+  
+  $(document).on("submit","#return-form",function(e){
+      e.preventDefault();
+      var reason = $('#reason').val()
+      const product_id = $('#p_id').val()
+      const order_id = $('#o_id').val()
+      $("#modalAddcart").modal("hide");
+      swal({
+          title: "Are you sure?",
+          text: "You want to return item!",
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+          .then((willDelete) => {
+            if (willDelete) {
+              swal("Your request submitted successfully!", {
+                icon: "success",
+              }).then(() => {
+                  $.ajax({
+                      type:"POST",
+                      url:"{% url 'return_confirm' %}",
+                      data:{
+                          reason:$('#reason').val(),
+                          order: $('#o_id').val(),
+                          product: $('#p_id').val(),
+                          csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+                      },
+                      success: function(response){
+                          console.log(response)
+                             
+                      }
+                  })
+              });
+            } else {
+              /* swal("Your imaginary file is safe!");*/
+            }
+          });
+     
+  })
+  </script>
 {% endblock %}

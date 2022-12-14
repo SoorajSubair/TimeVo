@@ -1,0 +1,251 @@
+{% extends 'user_base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- ...:::: Start Breadcrumb Section:::... -->
+ <div class="breadcrumb-section breadcrumb-bg-color--golden">
+     <div class="breadcrumb-wrapper">
+         <div class="container">
+             <div class="row">
+                 <div class="col-12">
+                     <h3 class="breadcrumb-title">Payment</h3>
+                     <div class="breadcrumb-nav breadcrumb-nav-color--black breadcrumb-nav-hover-color--golden">
+                         <nav aria-label="breadcrumb">
+                             <ul>
+                                 <li><a href="{% url 'user_home' %}">Home</a></li>
+                                 <li><a href="{% url 'checkout' %}">Checkout</a></li>
+                                 <li class="active" aria-current="page">Payment</li>
+                             </ul>
+                         </nav>
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+ </div> <!-- ...:::: End Breadcrumb Section:::... -->
+
+ <div class="checkout-section">
+    <div class="container">
+        <div class="row">
+        <!-- </div> -->
+        <!-- Start User Details Checkout Form -->
+        <div class="checkout_form" data-aos="fade-up" data-aos-delay="400">
+            <div class="row">
+                <div class="col-lg-12 col-md-12 mt-3">
+                    <h3>Your order</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                    </form>
+                    <div class="order_table table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td> {{ item.product.name }} <strong> × {{ item.quantity }}</strong></td>
+                                    <td> ₹{{ item.get_total|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Bag Total</th>
+                                    <td>₹{{ bag_total|floatformat:2 }}</td>
+                                </tr>
+                                {% if order.coupon %}
+                                <tr>
+                                    <th>Bag Discout</th>
+                                    <td>₹{{ order.offer|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if order.wallet == False %}
+                                {% else %}
+                                <tr>
+                                    <th>Wallet Redeemed</th>
+                                    <td>₹{{ order.wallet_amount|floatformat:2 }}<br>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                <tr class="order_total">
+                                    <th>Order Total</th> 
+                                    <td><strong >₹<span id="total">{{ order.get_cart_total|floatformat:2 }}</span></strong></td>
+                                   
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="payment_user" style="text-align: center;">
+                        <div class="order_button pt-3">
+                            <h4 style="color: #000;">Choose You Payment Method</h4>
+                            <div class="row justify-content-center">
+                                <div class="col-12 col-lg-7">
+                            <button id="make-payment" class=" btn btn-md btn-black-default-hover mt-2" style="width: 100%;" type="submit">Cash On Delivery</button>
+                            <button id="rzp-button1" class=" btn btn-md btn-black-default-hover mt-2" style="width: 100%; background: #0058b3;">Razorpay</button>
+                        </div></div>
+                            <div style="width: 100%;" class="mt-3" id="paypal-button-container"></div>
+                            
+                        </div>
+                    </div>
+            </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block js %}
+<script src="https://www.paypal.com/sdk/js?client-id=Aa63fzrSHaqslrcCXiPoD5LaCiI5Won0iZx2cv5wZ0yxr7mkAih8zmbvALFo1IIS0Spw3Ox6tsCwqwlI&currency=USD"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    window.onload = function(){
+
+    /*var total = '{{order.total}}'*/
+   
+     var total = '{{order.get_cart_total}}'
+    
+    var paypalMethod = 'Paypal'
+    // Render the PayPal button into #paypal-button-container
+    paypal.Buttons({
+
+        style: {
+            layout:  'vertical',
+            shape:   'rect',
+            label:   'paypal'
+          },
+
+        // Set up the transaction
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: parseFloat(total).toFixed(2)
+                    }
+                }]
+            });
+        },
+
+        // Finalize the transaction
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(orderData) {
+                // Successful capture! For demo purposes:
+                console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
+                var transaction = orderData.purchase_units[0].payments.captures[0];
+                submitFormData(paypalMethod)
+
+                // Replace the above to show a success message within this page, e.g.
+                // const element = document.getElementById('paypal-button-container');
+                // element.innerHTML = '';
+                // element.innerHTML = '<h3>Thank you for your payment!</h3>';
+                // Or go to another URL:  actions.redirect('thank_you.html');
+            });
+        }
+
+    }).render('#paypal-button-container');
+    }
+
+
+    var total = '{{order.get_cart_total}}'
+    
+    var razropayMethod = 'Razropay'
+     
+    var options = {
+        "key": "rzp_test_i5iSNZEU8h4lVg", // Enter the Key ID generated from the Dashboard
+        "amount": total , // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+        "currency": "INR",
+        "name": "TimeVo",
+        "description": "Make Payment",
+        "image": "{% static 'user_home/assets/images/logo/logo_black.png' %}",
+        "order_id": "{{ payment.id }}", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+        "handler": function (response){
+            submitFormData(razropayMethod)
+        },
+        "theme": {
+            "color": "#3399cc"
+        }
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.on('payment.failed', function (response){
+            alert(response.error.code);
+            alert(response.error.description);
+            alert(response.error.source);
+            alert(response.error.step);
+            alert(response.error.reason);
+            alert(response.error.metadata.order_id);
+            alert(response.error.metadata.payment_id);
+    });
+    document.getElementById('rzp-button1').onclick = function(e){
+        rzp1.open();
+        e.preventDefault();
+    }
+
+</script>
+
+<script>
+
+    var total = '{{order.get_cart_total}}'
+
+    /*csrftoken = form.getElementsByTagName("input")[0].value*/
+    var cash = 'Cash'
+    
+    document.getElementById('make-payment').addEventListener('click', function(e){
+        console.log("cash")
+        submitFormData(cash)
+    })
+    
+    function submitFormData(method){
+        console.log('payment button clicked')
+        console.log('{{payment.amount}}')
+
+            var shippingId = '{{shippingId}}'
+        
+            var userFormData = {
+                'fname': null,
+                'lname': null,
+                'email': null,
+                'phone': null,
+                'total': total,
+                }
+
+        var url = 'process_order'
+        fetch(url,{
+            method: 'POST',
+            headers:{
+                'content-Type':'application/json',
+                'X-CSRFToken':csrftoken,
+            },
+            body:JSON.stringify({'form':userFormData, 'shipping': shippingId, 'method': method})  
+        })
+        .then((response) => response.json())
+        .then((data) =>{
+            if (data == 'payment complete'){
+                console.log('Success:', data);
+                cart = {}
+                document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
+                window.location.href = "{% url 'order_complete' %}"
+                }
+            else if (data == 'out of stock'){
+                cart = {}
+                document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
+                window.location.href = "{% url 'checkout' %}"
+                }
+            else if (data == 'not completed'){
+                cart = {}
+                document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
+                window.location.href = "{% url 'checkout' %}"
+                }
+            else {
+                cart = {}
+                document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
+                window.location.href = "{% url 'user_home' %}"
+            }   
+        }) 
+    }
+
+</script>
+{% endblock %}

@@ -21,8 +21,54 @@
         <div class="card_body">
             <div class="row d-flex">
             <div class="col-12  mt-3" style="text-align: center;">
-                    <h6 style="font-size: large;">Sales Report</h6>
+                    <h6 style="font-size: xx-large;">Canceled/Returned Report</h6>
             </div> 
+            <div class="col-12 col-lg-3 mt-3 mb-3" style="text-align: center;">
+                <h6 style="font-size: large;">Date Range</h6>
+                <form action="" method="post">
+                {% csrf_token %}
+                <div class="mt-4">
+                <label  for="startdate">From</label>
+                <input onchange="startdate(this.value)"  type="date" name="start-date" id="startdate" class="text-dark" required>
+                <label  for="enddate">to</label>
+                <input onchange="enddate(this.value)"  type="date" name="end-date" id="enddate" class="text-dark" required>
+                </div>
+                <div>
+                <button name="datefilter" class="mt-2" >submit</button>
+                </div>
+                </form>
+            </div>
+            <div class="col-12 col-lg-4 mt-3 mb-3" style="text-align: center;">
+                <h6 style="font-size: large;">Month Range</h6>
+                <form action="" method="post">
+                {% csrf_token %}
+                <div class="mt-4">
+                <label  for="startmonth">From</label>
+                <input onchange="startmonth1(this.value)"  type="month" name="start-month" id="startmonth" class="text-dark" required>
+                <label  for="endmonth">to</label>
+                <input onchange="endmonth1(this.value)"  type="month" name="end-month" id="endmonth" class="text-dark" required>
+                </div>
+                <div>
+                <button name="monthfilter" class="mt-2" >submit</button>
+                </div>
+                </form>
+            </div>
+            <div class="col-12 col-lg-2 mt-3 mb-3" style="text-align: center;">
+                <h6 style="font-size: large;">Year</h6>
+                <form action="" method="post">
+                {% csrf_token %}
+                <div class="mt-4">
+                    <select class="form-control" name="year" id="dYear" required>
+                        <option value="" selected disabled>Select the year..</option>
+                        <option value="2020-01-01" >2020</option>
+                        <option value="2021-01-01" >2021</option>
+                        <option value="2022-01-01" >2022</option>
+                       </select>
+                <div>
+                <button name="yearfilter" class="mt-2" >submit</button>
+                </div>
+                </form>
+            </div>
         </div>
             <!-- <div class="overflow-x"> -->
                 <div class="table-responsive">
@@ -35,7 +81,6 @@
                             <th style="min-width:150px;">Product</th>
                             <th style="min-width:150px;">Price</th>
                             <th style="min-width:150px;">Payment</th>
-                            <th style="min-width:150px;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -47,13 +92,6 @@
                                 <td>{{ sale.item }}</td>
                                 <td>₹{{ sale.price|floatformat:2 }}</td>
                                 <td>{{ sale.order.payment}}</td>
-                                <td>
-                                {% if sale.status == 'Returned' %}
-                                <div style="font-size: 1rem;" class="badge badge-outline-warning">{{ sale.status }}</div>
-                                {% else %}
-                                <div style="font-size: 1rem;" class="badge badge-outline-danger">{{ sale.status }}</div>
-                                {% endif %}
-                                </td>
                             </tr>  
                             {% endfor %}     
                     </tbody>
@@ -90,4 +128,32 @@
         } );
     } );
 </script>
+<script>
+    if ( window.history.replaceState ) {
+        window.history.replaceState( null, null, window.location.href );
+    }
+</script>
+<script>
+    var todayDate = new Date();
+    var month = todayDate.getMonth() + 1; 
+    var year = todayDate.getFullYear() ; 
+    if (month < 10) {
+        month = "0" + month //'0' + 4 = 04
+    }
+    var maxMonth = year + "-" + month;
+    console.log(maxMonth)
+    document.getElementById("endmonth").setAttribute("max", maxMonth);
+    document.getElementById("startmonth").setAttribute("max", maxMonth);
+
+    function startmonth1(startmonth){
+        document.getElementById("endmonth").setAttribute("min", startmonth);
+        console.log(startmonth)
+       }
+    
+       function endmonth1(endmonth){
+        document.getElementById("startmonth").setAttribute("max", endmonth);
+        end = endmonth
+       }
+
+  </script>
 {% endblock %}

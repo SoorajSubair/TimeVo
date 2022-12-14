@@ -135,7 +135,22 @@ class Coupon(models.Model):
     description = models.CharField(max_length=300, null=True, blank=True)
 
     def __str__(self):
-        return str(self.code)      
+        return str(self.code)  
+
+class ShippingAddress(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
+    # order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
+    name = models.CharField(max_length=200, null=True, blank=True)
+    phone = models.CharField(max_length=15, null=True, blank=True)
+    address = models.CharField(max_length=200, null=False)
+    appartment_no = models.CharField(max_length=200, null=True, blank=True)
+    city = models.CharField(max_length=200, null=False)
+    state = models.CharField(max_length=200, null=False)
+    zipcode = models.CharField(max_length=200, null=False)
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.user)    
 
 class Order(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
@@ -145,10 +160,13 @@ class Order(models.Model):
     status = models.CharField(max_length=100, null=True, blank=True)
     payment = models.CharField(max_length=100, null=True, blank=True)
     order_coupon = models.ForeignKey(Coupon,on_delete=models.SET_NULL, null=True, blank=True)
-    offer = models.DecimalField(max_digits=7, decimal_places=2, null=True , blank=True)
-    total = models.DecimalField(max_digits=7, decimal_places=2, null=True , blank=True)
+    coupon = models.BooleanField(default=False)
+    offer = models.DecimalField(default = 0, max_digits=7, decimal_places=2, null=True , blank=True)
+    total = models.DecimalField(default = 0, max_digits=7, decimal_places=2, null=True , blank=True)
     cancelled = models.BooleanField(default=False)
     wallet = models.BooleanField(default=False)
+    wallet_amount = models.DecimalField(default=0, max_digits=7, decimal_places=2, null=True , blank=True)
+    address = models.ForeignKey(ShippingAddress, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return str(self.user)
@@ -157,6 +175,15 @@ class Order(models.Model):
     def get_cart_total(self):
         orderitems  = self.orderitem_set.all()
         total  = sum([item.get_total for item in orderitems])
+        if self.coupon:
+            total = float(total) - float(self.offer)
+        if self.wallet:
+            total = float(total) - float(self.wallet_amount)
+        return total
+    
+    @property
+    def bill_total(self):
+        total = float(self.get_cart_total) + float(self.wallet_amount)
         return total
 
     @property
@@ -212,21 +239,6 @@ class CancelItem(models.Model):
     def __str__(self):
         return str(self.product)
 
-class ShippingAddress(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
-    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
-    name = models.CharField(max_length=200, null=True, blank=True)
-    phone = models.CharField(max_length=15, null=True, blank=True)
-    address = models.CharField(max_length=200, null=False)
-    appartment_no = models.CharField(max_length=200, null=True, blank=True)
-    city = models.CharField(max_length=200, null=False)
-    state = models.CharField(max_length=200, null=False)
-    zipcode = models.CharField(max_length=200, null=False)
-    date_added = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return str(self.user)
-
 class ProductOffer(models.Model):
     product = models.ForeignKey(Product,on_delete=models.CASCADE, null=True)
     offer = models.PositiveIntegerField(null=True, blank=True)
@@ -251,7 +263,7 @@ class Sale(models.Model):
     @property
     def get_total(self):
         
-        if self.order.order_coupon:
+        if self.order.coupon:
             offer = self.order.offer
             discount = self.order.order_coupon.discount
             max_discount = self.order.order_coupon.maximum_discount
@@ -283,6 +295,12 @@ class Wallet(models.Model):
 
     def __str__(self):
         return str(self.user)
+
+class ReturnRequest(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    item = models.ForeignKey(OrderItem, on_delete=models.SET_NULL, null=True, blank=True)
+    reason = models.CharField(max_length=500)
+    
 
     
 

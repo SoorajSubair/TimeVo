@@ -9,12 +9,15 @@ from django.conf import settings
 from django.views.decorators.cache import never_cache
 from django.core.paginator import Paginator, EmptyPage
 from .mixins import Messghandler
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 import json
 import datetime
 from django.db.models import Q
 from .utils import cookieCart,cartData
 import razorpay
+from decimal import *
 
 # Create your views here.
 
@@ -57,7 +60,7 @@ def user_home(request):
 
     main_banner = MainBanners.objects.all()
     sub_banner = SubBanners.objects.all()
-    products = Product.objects.all()[:12]
+    products = Product.objects.filter(offer = True).order_by('id')
     categories = Category.objects.all()
     men = Category.objects.get(name = 'MEN')
     women = Category.objects.get(name = 'WOMEN')
@@ -201,7 +204,7 @@ def list(request, id):
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
         search_product = Product.objects.filter(name__icontains=search_item)
-        context = {"search_product": search_product}
+        context = {"search_product": search_product,"cartItems": cartItems}
         return render(request,'search_product_list.html',context)
     
     sorting = request.GET.get('sorting', '')
@@ -260,7 +263,7 @@ def details(request, id):
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
         search_product = Product.objects.filter(name__icontains=search_item)
-        context = {"search_product": search_product}
+        context = {"search_product": search_product,"cartItems": cartItems}
         return render(request,'search_product_list.html',context)
 
     product = Product.objects.get(id = id)
@@ -282,42 +285,54 @@ def cart(request):
     order = data['order']
     items = data['items']
     coupons = Coupon.objects.all()
+    if request.user.is_authenticated:
+        bag_total = float(order.get_cart_total)+float(order.offer)+float(order.wallet_amount)
+        wallet = Wallet.objects.get(user = request.user)
+        wallet.amount = float(wallet.amount)+float(order.wallet_amount)
+        order.wallet_amount = 0
+        order.wallet = False
+        wallet.save()
+        order.save()
 
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
         search_product = Product.objects.filter(name__icontains=search_item)
-        context = {"search_product": search_product}
+        context = {"search_product": search_product, "cartItems": cartItems}
         return render(request,'search_product_list.html',context)
 
     if request.user.is_authenticated:
-        if order.order_coupon:
+        if order.coupon:
             coupon = order.order_coupon
             if coupon.endDate < datetime.date.today():
                 order.order_coupon = None
-                order.offer = None
-                order.total = None
+                order.offer = 0
+                order.total = 0
+                order.coupon = False
                 order.save()
                 return redirect(cart)
             if not coupon.is_active:
                 order.order_coupon = None
-                order.offer = None
-                order.total = None
+                order.offer = 0
+                order.total = 0
+                order.coupon = False
                 order.save()
                 return redirect(cart)
-            if coupon.minimum_amount >= order.get_cart_total:
+            if coupon.minimum_amount >= (float(order.get_cart_total) + float(order.offer)+ float(order.wallet_amount)):
                 order.order_coupon = None
-                order.offer = None
-                order.total = None
+                order.offer = 0
+                order.total = 0
+                order.coupon = False
                 order.save()
                 return redirect(cart)
             else:
                 discount = coupon.discount
-                order.offer = (discount/100)*float(order.get_cart_total)
+                order.offer = (discount/100)*(float(order.get_cart_total) + float(order.offer)+ float(order.wallet_amount))
                 if order.offer > coupon.maximum_discount:
                     order.offer = float(coupon.maximum_discount)
-                order.total = float(order.get_cart_total) - order.offer
+                # order.total = float(order.get_cart_total) - order.offer
+                order.coupon = True
                 order.save()
-                context = {"items":items,"order":order, "cartItems": cartItems, "coupons": coupons}
+                context = {"items":items,"order":order, "cartItems": cartItems,"bag_total":bag_total, "coupons": coupons}
                 return render(request, 'cart.html', context)
         
     context = {"items":items,"order":order, "cartItems": cartItems, "coupons": coupons}
@@ -325,30 +340,47 @@ def cart(request):
 
 
 @never_cache
-def cart_item_delete(request, id):
+def cart_item_delete(request):
+    id = request.GET['id']
     item = OrderItem.objects.get(id = id)
     item.delete()
-    return redirect(cart)
+    user = request.user
+    order, created = Order.objects.get_or_create(user=user, complete=False)
+    bag_total = float(order.get_cart_total)+float(order.offer)+float(order.wallet_amount)
+    return JsonResponse({"message": "success",'cartItems': order.get_cart_items, 'total': order.get_cart_total, 'bag_total':'%.2f' % bag_total}, safe=False)
+    
+@never_cache
+def delete_item_guest(request):
+    data = cartData(request)
+    order = data['order']
+    return JsonResponse({"message":"success", 'cartItems': order['get_cart_items'], 'total':order['get_cart_total'], 'bag_total':order['get_cart_total']}, safe=False)
 
 @never_cache
 def coupon_delete(request):
     if request.method == 'GET':
         id = request.GET['orderId']
         order = Order.objects.get(id = id)
+        order.coupon = False
         order.order_coupon = None
-        order.offer = None
-        order.total = None
+        order.offer = 0
+        order.total = 0
+        wallet = Wallet.objects.get(user = request.user)
+        wallet.amount = float(wallet.amount)+float(order.wallet_amount)
+        order.wallet_amount = 0
+        order.wallet = False
+        wallet.save()
         order.save()
+        message = 'coupon deleted'
 
-        return JsonResponse('coupon deleted', safe=False)
+        return JsonResponse({"total": order.get_cart_total,"label": message,"wallet":'%.2f' % wallet.amount}, safe=False)
     
     return redirect(cart)
 
 @never_cache
 def update_item(request):
-    data = json.loads(request.body)
-    productId = data['productId']
-    action = data['action']
+
+    productId = request.GET['productId']
+    action = request.GET['action']
 
     user = request.user
     product = Product.objects.get(id = productId)
@@ -364,8 +396,27 @@ def update_item(request):
 
     if orderItem.quantity <= 0:
         orderItem.delete()
+    
+    item_quantity = orderItem.quantity
+    item_total = orderItem.get_total
+    id = orderItem.pk
+    bag_total = float(order.get_cart_total)+float(order.offer)+float(order.wallet_amount)
+    
+    return JsonResponse({'cartItems': order.get_cart_items, 'total': order.get_cart_total, 'bag_total':'%.2f' % bag_total,"item_quantity":item_quantity,"item_total":item_total,"id":id}, safe=False)
 
-    return JsonResponse('Item was added', safe=False)
+@never_cache
+def update_item_guest(request):
+   
+    id = int(request.GET['id'])
+    data = cartData(request)
+    order = data['order']
+    items = data['items']
+    for item in items:
+        if item['product']['id'] == id:
+            item_quantity = item['quantity']
+            item_total = item['get_total']
+
+    return JsonResponse({"message":"success", 'cartItems': order['get_cart_items'], 'total':order['get_cart_total'], 'bag_total':order['get_cart_total'],"item_quantity":item_quantity,"item_total":item_total}, safe=False)
 
 @never_cache
 def wishlist(request):
@@ -373,6 +424,9 @@ def wishlist(request):
 
 @never_cache
 def checkout(request):
+
+    if not request.user.is_authenticated:
+        return redirect(user_login)
     
     data = cartData(request)
     cartItems = data['cartItems']
@@ -380,16 +434,45 @@ def checkout(request):
     items = data['items']
     address = data['address']
     coupons = Coupon.objects.all()
+    bag_total = float(order.get_cart_total)+float(order.offer)+float(order.wallet_amount)
     wallet,create = Wallet.objects.get_or_create(user = request.user)
     wallet_amount = wallet.amount
 
     if request.user.is_authenticated:
-        client = razorpay.Client(auth=(settings.RAZORPAY_ID, settings.RAZORPAY_ACCOUNT_ID))
-        payment = client.order.create({'amount': float(order.get_cart_total) * 100, 'currency': 'INR' , 'payment_capture': 1})
-        order.transaction_id = payment['id']
-        order.save()
-        context = {"items":items,"order":order, "cartItems": cartItems, "address": address, "payment": payment, "coupons": coupons, "wallet": wallet_amount}
-    
+        if order.coupon:
+            coupon = order.order_coupon
+            if coupon.endDate < datetime.date.today():
+                order.order_coupon = None
+                order.offer = 0
+                order.total = 0
+                order.coupon = False
+                order.save()
+            if not coupon.is_active:
+                order.order_coupon = None
+                order.offer = 0
+                order.total = 0
+                order.coupon = False
+                order.save()
+            if coupon.minimum_amount >= (float(order.get_cart_total) + float(order.offer)+ float(order.wallet_amount)):
+                order.order_coupon = None
+                order.offer = 0
+                order.total = 0
+                order.coupon = False
+                order.save()
+            else:
+                discount = coupon.discount
+                order.offer = (discount/100)*(float(order.get_cart_total) + float(order.offer)+ float(order.wallet_amount))
+                if order.offer > coupon.maximum_discount:
+                    order.offer = float(coupon.maximum_discount)
+                order.coupon = True
+                order.save()
+
+    # if request.user.is_authenticated:
+    #     client = razorpay.Client(auth=(settings.RAZORPAY_ID, settings.RAZORPAY_ACCOUNT_ID))
+    #     payment = client.order.create({'amount': float(order.get_cart_total) * 100, 'currency': 'INR' , 'payment_capture': 1})
+    #     order.transaction_id = payment['id']
+    #     order.save()
+        
     if request.method == 'POST':
         if 'address_create' in request.POST:
             address = ShippingAddress.objects.create(user = request.user)
@@ -404,83 +487,120 @@ def checkout(request):
             messages.success(request,'Address created successfully!!')
             return redirect(checkout)
 
-        if 'coupon_apply' in request.POST:
-            code = request.POST['coupon']
-            try:
-                coupon = Coupon.objects.get(code = code)
-                order.order_coupon = coupon
-            except:
-                messages.error(request, "Coupon doesn't Exist")
-                return redirect(checkout)
-            if coupon.endDate < datetime.date.today():
-                messages.error(request, "Coupon is Expired")
-                return redirect(checkout)
-            if not coupon.is_active:
-                messages.error(request, "Sorry This Coupon is Not Available")
-                return redirect(checkout)
-            if coupon.minimum_amount >= order.get_cart_total:
-                messages.error(request, "Need to Buy Minimum "+str(coupon.minimum_amount)+" to Avail this Offer")
-                return redirect(checkout)
-            else:
-                discount = coupon.discount
-                order.offer = (discount/100)*float(order.get_cart_total)
-                if order.offer > coupon.maximum_discount:
-                    order.offer = float(coupon.maximum_discount)
-                order.total = float(order.get_cart_total) - order.offer
-                order.save()
-                payment = client.order.create({'amount': float(order.total) * 100, 'currency': 'INR' , 'payment_capture': 1})
-                messages.success(request, "Coupon Applied")
-                context = {"items":items, "order":order, "cartItems": cartItems, "address": address, "payment": payment, "coupons": coupons, "code": code, "wallet": wallet_amount}
-                return render(request, 'checkout.html', context)
-
     if 'search_items' in request.GET:
         search_item = request.GET['search_items']
         search_product = Product.objects.filter(name__icontains=search_item)
-        context = {"search_product": search_product}
+        context = {"search_product": search_product, "cartItems": cartItems}
         return render(request,'search_product_list.html',context)
 
     if request.user.is_authenticated:
+        context = {"items":items,"order":order, "cartItems": cartItems, "address": address, "coupons": coupons, "wallet": wallet_amount,"bag_total": bag_total}
         return render(request, 'checkout.html',context)
     else:
         return redirect(user_login)
 
-# @never_cache
-# def redeem_wallet(request):
+@never_cache
+def coupon_apply(request):
+    if request.method == "POST":
+        data = cartData(request)
+        order = data['order']
+        code = request.POST['code']
+        try:
+            coupon = Coupon.objects.get(code = code)
+        except:
+            message = "Coupon doesn't Exist"
+            return JsonResponse({"message":"error","label":message}, safe=False)
+        wallet = Wallet.objects.get(user = request.user)
+        wallet.amount = float(wallet.amount)+float(order.wallet_amount)
+        order.wallet_amount = 0
+        order.wallet = False
+        wallet.save()
+        order.save()
+        wallet_amount = wallet.amount
+        if coupon.endDate < datetime.date.today():
+            message = "Coupon is Expired"
+            return JsonResponse({"message":"error","label":message}, safe=False)
+        if not coupon.is_active:
+            message = "Sorry This Coupon is Not Available"
+            return JsonResponse({"message":"error","label":message}, safe=False)
+        if coupon.minimum_amount >= (float(order.get_cart_total) + float(order.offer)):
+            message = "Need to Buy Minimum "+str(coupon.minimum_amount)+" to Avail this Offer"
+            return JsonResponse({"message":"error","label":message}, safe=False)
+        else:
+            discount = coupon.discount
+            order.offer = (discount/100)*(float(order.get_cart_total)+float(order.wallet_amount)+float(order.offer))
+            if order.offer > coupon.maximum_discount:
+                order.offer = float(coupon.maximum_discount)
+            order.order_coupon = coupon
+            order.coupon = True
+            order.save()
+            message = "Coupon Applied"
+            return JsonResponse({"message":"success","code":code, "offer": '%.2f' % order.offer, "total": '%.2f' % order.get_cart_total, "label":message,"wallet":'%.2f' % wallet.amount}, safe=False)
+    
+@never_cache
+def redeem_wallet(request):
 
-#     data = cartData(request)
-#     order = data['order']
-#     wallet = Wallet.objects.get(user = request.user)
-#     wallet_amount = wallet.amount
-#     if order.order_coupon:
-#         if wallet_amount > order.total:
-#             wallet_amount = float(wallet_amount) - float(order.total)
-#             order.total = 0
-#             order.wallet = True
-#             wallet.save()
-#             order.save()
-#         else:
-#             order.total = float(order.total) - float(wallet_amount)
-#             wallet_amount = 0
-#             order.wallet = True
-#             wallet.save()
-#             order.save()
-#     else:
-#         if wallet_amount > order.total:
-#             order.total = order.get_cart_total
-#             wallet_amount = float(wallet_amount) - float(order.total)
-#             order.total = 0
-#             order.wallet = True
-#             wallet.save()
-#             order.save()
-#         else:
-#             order.total = order.get_cart_total
-#             order.total = float(order.total) - float(wallet_amount) 
-#             wallet_amount = 0
-#             order.wallet = True
-#             wallet.save()
-#             order.save()
+    data = cartData(request)
+    order = data['order']
+    wallet = Wallet.objects.get(user = request.user)
+    if float(wallet.amount) > float(order.get_cart_total):
+        updated_wallet = float(wallet.amount) - float(order.get_cart_total)
+        order.wallet_amount = (float(wallet.amount) - float(updated_wallet)) - float(1)
+        wallet.amount = updated_wallet + 1
+        order.wallet = True
+        wallet.save()
+        order.save()
+    else:
+        order.wallet_amount = float(wallet.amount)
+        wallet.amount = 0
+        order.wallet = True
+        wallet.save()
+        order.save()
 
-#     return redirect(checkout)
+    return JsonResponse({"message":"reedeemed", "total":'%.2f' % order.get_cart_total, "redeemed":'%.2f' % order.wallet_amount}, safe=False) 
+
+@never_cache
+def remove_wallet(request):
+    data = cartData(request)
+    order = data['order']
+    wallet = Wallet.objects.get(user = request.user)
+    wallet.amount = float(wallet.amount)+float(order.wallet_amount)
+    order.wallet_amount = 0
+    order.wallet = False
+    wallet.save()
+    order.save()
+
+    return JsonResponse({"message":"reedeemed", "total":'%.2f' % order.get_cart_total,"wallet":'%.2f' % wallet.amount }, safe=False)
+
+@never_cache
+def order_address(request):
+    id = request.GET['shippingId']
+    address = ShippingAddress.objects.get(id = id)
+    data = cartData(request)
+    order = data['order']
+    order.address = address
+    order.save()
+    return JsonResponse("success",safe=False)
+
+@never_cache
+def payment(request):
+    data = cartData(request)
+    cartItems = data['cartItems']
+    order = data['order']
+    items = data['items']
+    address = data['address']
+    coupons = Coupon.objects.all()
+    bag_total = float(order.get_cart_total)+float(order.offer)+float(order.wallet_amount)
+    wallet,create = Wallet.objects.get_or_create(user = request.user)
+    wallet_amount = wallet.amount
+
+    client = razorpay.Client(auth=(settings.RAZORPAY_ID, settings.RAZORPAY_ACCOUNT_ID))
+    payment = client.order.create({'amount': float(order.get_cart_total) * 100, 'currency': 'INR' , 'payment_capture': 1})
+    order.transaction_id = payment['id']
+    order.save()
+    context = {"items":items,"order":order, "cartItems": cartItems, "address": address, "payment": payment, "coupons": coupons, "wallet": wallet_amount,"bag_total": bag_total}
+
+    return render(request, 'payment.html',context)
 
 @never_cache
 def process_order(request):
@@ -494,16 +614,12 @@ def process_order(request):
         user = request.user
         order, create = Order.objects.get_or_create(user=user, complete=False)
         total = float(data['form']['total'])
-        addressId = data['shipping']
-        address = ShippingAddress.objects.get(id = addressId)
+        # addressId = data['shipping']
+        # address = ShippingAddress.objects.get(id = addressId)
         order.transaction_id = transaction_id
         orderItems = OrderItem.objects.filter(order = order)
-
-        if order.order_coupon:
-            order_total = float(order.total)
-        else:
-            order_total = float(order.get_cart_total)
-
+      
+        order_total = float(order.get_cart_total)
         if total == order_total: 
             for item in orderItems:
                 if item.product.quantity >= item.quantity:
@@ -518,22 +634,17 @@ def process_order(request):
             order.date_ordered = datetime.datetime.today()
             order.status = "Order Received"
             order.payment = data['method']
-            address.order = order
-            address.save()
+            # order.address = address
+            # address.order = order
+            # address.save()
         order.save()
 
         if order.complete == True:
             sales, create = SalesReport.objects.get_or_create(date = datetime.date.today())
-            if sales.sale == None:
-                if order.order_coupon:
-                    sales.sale = order.total
-                else:
-                    sales.sale = order.get_cart_total
-            else:
-                if order.order_coupon:
-                    sales.sale = sales.sale + order.total
-                else:
-                    sales.sale = sales.sale + order.get_cart_total
+            if sales.sale == None:    
+                sales.sale = float(order.get_cart_total) + float(order.wallet_amount)
+            else:    
+                sales.sale = float(sales.sale) + float(order.get_cart_total) + float(order.wallet_amount)
             sales.save()
 
             for item in orderItems:
@@ -575,24 +686,25 @@ def user_account(request):
             address.save()
             messages.success(request,'Address updated successfully!!')
             return redirect(user_account)
-        else:
-            if 'search_items' in request.GET:
-                search_item = request.GET['search_items']
-                search_product = Product.objects.filter(name__icontains=search_item)
-                context = {"search_product": search_product}
-                return render(request,'search_product_list.html',context)
 
-            user = request.user
-            order, created = Order.objects.get_or_create(user=user, complete=False)
-            address = ShippingAddress.objects.filter(user=user)
-            wallet = Wallet.objects.get(user = user)
-            orders = Order.objects.filter(user = user) 
-            items = order.orderitem_set.all()
-            cartItems = order.get_cart_items
-            sale = Sale.objects.filter(order = order)
+        user = request.user
+        order, created = Order.objects.get_or_create(user=user, complete=False)
+        address = ShippingAddress.objects.filter(user=user)
+        wallet = Wallet.objects.get(user = user)
+        orders = Order.objects.filter(user = user) 
+        items = order.orderitem_set.all()
+        cartItems = order.get_cart_items
+        sale = Sale.objects.filter(order = order)
 
-            context = {"items": items, "cartItems": cartItems, "address":address, "orders": orders, "wallet": wallet, "sale": sale}
-            return render(request, 'user_account.html', context)
+        if 'search_items' in request.GET:
+            search_item = request.GET['search_items']
+            search_product = Product.objects.filter(name__icontains=search_item)
+            context = {"search_product": search_product, "cartItems": cartItems}
+            return render(request,'search_product_list.html',context)
+
+
+        context = {"items": items, "cartItems": cartItems, "address":address, "orders": orders, "wallet": wallet, "sale": sale}
+        return render(request, 'user_account.html', context)
     else:
         return redirect(user_home)
 
@@ -671,6 +783,7 @@ def order_details(request, id):
     address = ShippingAddress.objects.filter(user = user)
     items = OrderItem.objects.filter(order = order)
     cancel_item = CancelItem.objects.filter(order = order)
+    bag_total = float(order.get_cart_total)+float(order.offer)+float(order.wallet_amount)
     products = []
     cancel_products =[]
     for i in items:
@@ -690,17 +803,15 @@ def order_details(request, id):
         order.status = 'Order Cancel'
         order.cancelled = True
         sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
-        if order.order_coupon:
-            sales.sale = sales.sale - order.total
-        else:
-            sales.sale = sales.sale - order.get_cart_total
+        sales.sale = float(sales.sale) - (float(order.get_cart_total)+float(order.wallet_amount))
         sales.save()
         order.order_coupon = None
-        order.offer = None
-        order.total = None
+        order.coupon = False
+        order.offer = 0
+        order.total = 0
         order.save()
 
-    context = {"items": items, "cartItems": cartItems, "address":address, "order": order, "products": products, "cancel_products": cancel_products}
+    context = {"items": items, "cartItems": cartItems, "address":address, "order": order, "products": products, "cancel_products": cancel_products,"bag_total": bag_total}
     return render(request, 'order_details.html', context)
 
 @never_cache
@@ -708,10 +819,7 @@ def order_delete(request, id):
     order = Order.objects.get(id = id)
     orderItems = OrderItem.objects.filter(order_id = id)
     sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
-    if order.order_coupon:
-        sales.sale = sales.sale - order.total
-    else:
-        sales.sale = sales.sale - order.get_cart_total
+    sales.sale = float(sales.sale) - (float(order.get_cart_total) + float(order.wallet_amount))
     sales.save()
 
     for item in orderItems:
@@ -752,9 +860,10 @@ def order_delete(request, id):
 
     order.status = 'Order Cancel'
     order.cancelled = True
+    order.coupon = False
     order.order_coupon = None
-    order.offer = None
-    order.total = None
+    order.offer = 0
+    order.total = 0
     order.save()
     return redirect(user_account)
 
@@ -764,8 +873,6 @@ def orderItem_delete(request, p_id, o_id):
     cancel_item, create = CancelItem.objects.get_or_create(order_id = o_id, product_id = p_id, status = 'Canceled')
     order = Order.objects.get(id = o_id)
     sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
-    sales.sale = sales.sale - item.product.price
-    sales.save()
     item.quantity = (item.quantity - 1)
 
     if cancel_item.quantity == 0:
@@ -776,6 +883,8 @@ def orderItem_delete(request, p_id, o_id):
 
     all_sale = Sale.objects.get(order = order, item = item.product.name)
     price = float(all_sale.get_total)/float(all_sale.quantity)
+    sales.sale = float(sales.sale) - float(price)
+    sales.save()
     cancel_sale= CancelSale.objects.create(order = order, item = item.product.name)
     cancel_sale.date = datetime.date.today() 
     cancel_sale.price = price
@@ -789,24 +898,20 @@ def orderItem_delete(request, p_id, o_id):
     else:
         item.save()
 
-    if order.order_coupon:
+    if order.coupon:
         coupon = order.order_coupon
-        if coupon.minimum_amount >= order.get_cart_total:
-            order.total = order.get_cart_total
+        if coupon.minimum_amount >= (float(order.get_cart_total) + float(order.offer) + float(order.wallet_amount)):
+            order.total = 0
+            order.offer = 0
+            order.coupon = False
             order.order_coupon = None
         else:
             discount = coupon.discount
-            order.offer = (discount/100)*float(order.get_cart_total)
+            order.offer = (discount/100)*(float(order.get_cart_total) + float(order.offer) + float(order.wallet_amount))
             if order.offer > coupon.maximum_discount:
                 order.offer = float(coupon.maximum_discount)
-            order.total = float(order.get_cart_total) - order.offer
+            # order.total = float(order.get_cart_total) - order.offer
         order.save()
-
-    if order.payment != 'Cash':
-        user = request.user
-        wallet = Wallet.objects.get(user = user)
-        wallet.amount = float(wallet.amount) + float(price)
-        wallet.save()
 
     if all_sale.quantity == 0:
         all_sale.delete()
@@ -818,46 +923,41 @@ def orderItem_delete(request, p_id, o_id):
     return redirect(order_details,o_id)
 
 @never_cache
-def orderItem_return(request, p_id, o_id):
-    item = OrderItem.objects.get(order_id = o_id, product_id = p_id)
-    cancel_item, create = CancelItem.objects.get_or_create(order_id = o_id, product_id = p_id, status = 'Returned')
-    order = Order.objects.get(id = o_id)
-    sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
-    sales.sale = sales.sale - item.product.price
-    sales.save()
-    item.quantity = (item.quantity - 1)
+def return_confirm(request):
 
-    if cancel_item.quantity == 0:
-        cancel_item.quantity = 1
-    else:
-         cancel_item.quantity = cancel_item.quantity + 1
-    cancel_item.save()
+    if request.method == "POST":
+        reason = request.POST['reason']
+        o_id = request.POST["order"]
+        p_id = request.POST["product"]
+        print(reason,o_id,p_id)
+        item = OrderItem.objects.get(order_id = o_id, product_id = p_id)
+        quantity = item.quantity
+        records = ReturnRequest.objects.filter(item = item, user = request.user).count()
+        if records < quantity:
+            return_request = ReturnRequest.objects.create(item = item, reason = reason, user = request.user)
+            return_request.save()
+        return JsonResponse("success",safe=False)
 
-    all_sale = Sale.objects.get(order = order, item = item.product.name)
-    price = float(all_sale.get_total)/float(all_sale.quantity)
-    cancel_sale= CancelSale.objects.create(order = order, item = item.product.name)
-    cancel_sale.date = datetime.date.today() 
-    cancel_sale.price = price
-    cancel_sale.status = 'Returned'
-    all_sale.quantity = all_sale.quantity - 1
+@never_cache
+def invoice(request, id):
+    order = Order.objects.get(id = id)
+    items = OrderItem.objects.filter(order = order)
+    bag_total = float(order.get_cart_total)+float(order.offer)+float(order.wallet_amount)
+    user = request.user
+    # context = {"order":order, "items": items, "bag_total":bag_total, "user": user}
+    # return render(request, 'pdf/invoice.html', context)
+    template_path = 'pdf/invoice.html'
+    context = {"order":order, "items": items, "bag_total":bag_total, "user": user}
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'filename="invoice.pdf"'
+    template = get_template(template_path)
+    html = template.render(context)
 
-    item.product.quantity = (item.product.quantity + 1)
-    item.product.save()
-    if item.quantity == 0:
-        item.delete()
-    else:
-        item.save()
+    # create a pdf
+    pisa_status = pisa.CreatePDF(
+       html, dest=response)
+    # if error then show some funy view
+    if pisa_status.err:
+       return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response
 
-    if order.payment != 'Cash':
-        user = request.user
-        wallet = Wallet.objects.get(user = user) 
-        wallet.amount = float(wallet.amount) + float(price)
-        wallet.save()
-
-    if all_sale.quantity == 0:
-        all_sale.delete()
-    else:
-        all_sale.save()
-    cancel_sale.save()
-
-    return redirect(order_details,o_id)

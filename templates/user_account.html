@@ -107,11 +107,7 @@
                                         {% if orders.cancelled %}
                                         <td>₹{{orders.get_canceled_total|floatformat:2}} for {{orders.get_canceled_items}} item </td>
                                         {% else %}
-                                        {% if orders.order_coupon%}
-                                        <td>₹{{orders.total|floatformat:2}} for {{orders.get_cart_items}} item </td>
-                                        {% else %}
-                                        <td>₹{{orders.get_cart_total|floatformat:2}} for {{orders.get_cart_items}} item </td>
-                                        {% endif %}
+                                        <td>₹{{orders.bill_total|floatformat:2}} for {{orders.get_cart_items}} item </td>
                                         {% endif %}
                                         <td><a href="{% url 'order_details' orders.id %}" class="view">view</a></td>
                                     </tr>
@@ -124,7 +120,7 @@
                     <div class="tab-pane" id="address">
                         <div class="container">
                         <div class="row">
-                            <div onclick="hiddenAddress()" class="col-12 pt-3 pl-3 border border-dark" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#checkout_login"
+                            <div onclick="hiddenAddress()" class="col-12 pt-3 pl-3 border border-dark new-address" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#checkout_login"
                             aria-expanded="true">
                                 <p style="font-size: 16px; font-weight: 900;"><span class="mr-3">+</span>ADD NEW ADDRESS</p>
                             </div>
@@ -383,9 +379,11 @@ file.addEventListener('change', function(){
 <script>
     function hiddenAddress(){
         $('.address-bar').addClass('d-none');
+        $('.new-address').addClass('d-none');
     }
     function showAddress(){
         $('.address-bar').removeClass('d-none');
+        $('.new-address').removeClass('d-none');
     }
 
     function address_delete(event) {

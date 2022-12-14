@@ -65,7 +65,7 @@
   {% if order.get_cart_items > 0 %}
   <div class="d-flex mx-5 ">
     <div class="  p-2 font-weight-bold"><h4>Bag Amount</h4></div>
-    <div class="p-2 font-weight-bold"><h4>₹{{order.get_cart_total|floatformat:2}}</h4></div>
+    <div class="p-2 font-weight-bold"><h4>₹{{bag_total|floatformat:2}}</h4></div>
   </div>
   {% endif %}
   <div class="d-flex mx-5 ">
@@ -79,13 +79,13 @@
   </div>
   <div class="d-flex mx-5 ">
     <div class="  p-2 font-weight-bold"><h4>Total Amount</h4></div>
-    <div class="p-2 font-weight-bold"><h4>₹{{order.total|floatformat:2}}</h4></div>
+    <div class="p-2 font-weight-bold"><h4>₹{{order.bill_total|floatformat:2}}</h4></div>
   </div>
   {% else %}
   {% if order.get_cart_items > 0 %}
   <div class="d-flex mx-5 ">
     <div class="  p-2 font-weight-bold"><h4>Total Amount</h4></div>
-    <div class="p-2 font-weight-bold"><h4>₹{{order.get_cart_total|floatformat:2}}</h4></div>
+    <div class="p-2 font-weight-bold"><h4>₹{{order.bill_total|floatformat:2}}</h4></div>
   </div>
   {% endif %}
   {% endif %}

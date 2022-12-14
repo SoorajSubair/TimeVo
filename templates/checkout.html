@@ -121,18 +121,20 @@
                     <div class="coupon_code left mt-5" data-aos="fade-up" data-aos-delay="200">
                         <h3>Coupon</h3>
                         <div class="coupon_inner">
-                            <form action="" method="post">
+                            <form id="coupon-form">
                             {% csrf_token %}
                             <p>Enter your coupon code if you have one.</p>
-                            <input id="coupon" class="mb-2" placeholder="Coupon code" type="text" value="{{ code }}" name="coupon" required>
+                            <input id="coupon" class="mb-2" placeholder="Coupon code" type="text" value="{{ order.order_coupon.code }}" name="coupon" required>
                             <button type="submit" name="coupon_apply" class="btn btn-md btn-golden">Apply Coupon</button> 
+                            <span style="display: block;" id="coupon-message"></span>
                             </form>
+                            <a id="coupon-remove" class="d-none" onclick="coupon_remove('{{order.id}}')" style="display: table; text-align: right; border-bottom: none; cursor: pointer;">Remove Coupon</a>
                             {% if order.order_coupon %}
-                            <a onclick="coupon_remove('{{order.id}}')" style="display: table; text-align: right; border-bottom: none; cursor: pointer;">Remove Coupon</a>
+                            <a id="coupon-remove2" class="coupon-remove" onclick="coupon_remove('{{order.id}}')" style="display: table; text-align: right; border-bottom: none; cursor: pointer;">Remove Coupon</a>
                             {% endif %}
-                            <div id="content-wrapper" class="d-flex flex-column">
+                            <!-- <div id="content-wrapper" class="d-flex flex-column">
                                 {% include 'messages.html' %}
-                            </div>
+                            </div> -->
                             <a style="text-align: left; border-bottom: none; margin-bottom: 0; display: table; padding-top: 10px; cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#coupon_list"
                             aria-expanded="true">
                                 View all Coupons
@@ -173,39 +175,58 @@
                                     <tfoot>
                                         <tr>
                                             <th>Bag Total</th>
-                                            <td>₹{{ order.get_cart_total|floatformat:2 }}</td>
+                                            <td>₹{{ bag_total|floatformat:2 }}</td>
                                         </tr>
-                                        {% if order.order_coupon %}
-                                        <tr>
+                                        <tr id="bag-dicount" class="d-none">
+                                            <th>Bag Discout</th>
+                                            <td >₹<span id="order-offer">{{ order.offer|floatformat:2 }}</span></td>
+                                        </tr>
+                                        {% if order.coupon %}
+                                        <tr id="bag-dicount2">
                                             <th>Bag Discout</th>
                                             <td>₹{{ order.offer|floatformat:2 }}</td>
                                         </tr>
                                         {% endif %}
-                                        <!-- {% if wallet > 0 %}
-                                        <tr>
+                                        {% if wallet > 0 %}
+                                        {% if order.wallet == False %}
+                                        <tr id="balance">
                                             <th>Wallet Balance</th>
-                                            <td>₹{{ wallet|floatformat:2 }}<br>
-                                                <a style="text-decoration: underline;" href="">Redeem</a>
+                                            <td>₹<span id="wallet-balance">{{ wallet|floatformat:2 }}</span><br>
+                                                <a id="wallet-redeem" style="text-decoration: underline;cursor: pointer;">Redeem</a>
                                             </td>
                                         </tr>
-                                        {% endif %} -->
+                                        {% else %}
+                                        <tr>
+                                            <th>Wallet Redeemed</th>
+                                            <td>₹<span>{{ order.wallet_amount|floatformat:2 }}</span><br>
+                                                <a class="wallet-remove" style="text-decoration: underline;cursor: pointer;">Remove</a>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        <tr id="redeemed" class="d-none">
+                                            <th>Wallet Redeemed</th>
+                                            <td>₹<span id="wallet-used">{{ order.wallet_amount|floatformat:2 }}</span><br>
+                                                <a class="wallet-remove" style="text-decoration: underline;cursor: pointer;">Remove</a>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
                                         <tr class="order_total">
-                                            <th>Order Total</th>
-                                            {% if order.order_coupon or order.wallet %}
-                                            <td><strong id="total">₹{{ order.total|floatformat:2 }}</strong></td>
-                                            {% else %}
-                                            <td><strong id="total">₹{{ order.get_cart_total|floatformat:2 }}</strong></td>
-                                            {% endif %}
+                                            <th>Order Total</th> 
+                                            <td><strong >₹<span id="total">{{ order.get_cart_total|floatformat:2 }}</span></strong></td>
+                                           
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
                             <div class="payment_user d-none">
                                 <div class="order_button pt-3">
-                                    <h4 style="color: #000;">Choose You Payment Method</h4>
+                                    <div>
+                                        <a href="{% url 'payment' %}" class="btn btn-md btn-black-default-hover mt-2" style="width: 100%;">Proceed To Payment</a>
+                                    </div>
+                                    <!-- <h4 style="color: #000;">Choose You Payment Method</h4>
                                     <button id="make-payment" class="btn btn-md btn-black-default-hover mt-2" style="width: 100%;" type="submit">Cash On Delivery</button>
                                     <button id="rzp-button1" class="btn btn-md btn-black-default-hover mt-2" style="width: 100%; background: #0058b3;">Razorpay</button>
-                                    <div class="mt-3" id="paypal-button-container"></div>
+                                    <div class="mt-3" id="paypal-button-container"></div> -->
                                     
                                 </div>
                             </div>
@@ -246,175 +267,19 @@
         }
     </script>
 
-    <script src="https://www.paypal.com/sdk/js?client-id=Aa63fzrSHaqslrcCXiPoD5LaCiI5Won0iZx2cv5wZ0yxr7mkAih8zmbvALFo1IIS0Spw3Ox6tsCwqwlI&currency=USD"></script>
-    
-   
-
-<script>
-    window.onload = function(){
-    var total = '{{order.total}}'
-    if(total == 'None'){
-        var total = '{{order.get_cart_total}}'
-    }
-    var paypalMethod = 'Paypal'
-    // Render the PayPal button into #paypal-button-container
-    paypal.Buttons({
-
-        // Set up the transaction
-        createOrder: function(data, actions) {
-            return actions.order.create({
-                purchase_units: [{
-                    amount: {
-                        value: parseFloat(total).toFixed(2)
-                    }
-                }]
-            });
-        },
-
-        // Finalize the transaction
-        onApprove: function(data, actions) {
-            return actions.order.capture().then(function(orderData) {
-                // Successful capture! For demo purposes:
-                console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
-                var transaction = orderData.purchase_units[0].payments.captures[0];
-                submitFormData(paypalMethod)
-
-                // Replace the above to show a success message within this page, e.g.
-                // const element = document.getElementById('paypal-button-container');
-                // element.innerHTML = '';
-                // element.innerHTML = '<h3>Thank you for your payment!</h3>';
-                // Or go to another URL:  actions.redirect('thank_you.html');
-            });
-        }
-
-
-    }).render('#paypal-button-container');
-}
-</script>
-
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
+{% endblock content %}
+{% block js %}
 <script>
 
-    var total = '{{order.total}}'
-    if(total == 'None'){
-        var total = '{{order.get_cart_total}}'
-    }
-    var razropayMethod = 'Razropay'
-     
-    var options = {
-        "key": "rzp_test_i5iSNZEU8h4lVg", // Enter the Key ID generated from the Dashboard
-        "amount": total , // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-        "currency": "INR",
-        "name": "TimeVo",
-        "description": "Make Payment",
-        "image": "{% static 'user_home/assets/images/logo/logo_black.png' %}",
-        "order_id": "{{ payment.id }}", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-        "handler": function (response){
-            submitFormData(razropayMethod)
-        },
-        "theme": {
-            "color": "#3399cc"
-        }
-    };
-    var rzp1 = new Razorpay(options);
-    rzp1.on('payment.failed', function (response){
-            alert(response.error.code);
-            alert(response.error.description);
-            alert(response.error.source);
-            alert(response.error.step);
-            alert(response.error.reason);
-            alert(response.error.metadata.order_id);
-            alert(response.error.metadata.payment_id);
-    });
-    document.getElementById('rzp-button1').onclick = function(e){
-        rzp1.open();
-        e.preventDefault();
-    }
-
-</script>
-
-<script>
-    function submitAddress(id){
-        window.shippingId = id
-    }
-    var total = '{{order.total}}'
-    if(total == 'None'){
-        var total = '{{order.get_cart_total}}'
-    }
-    csrftoken = form.getElementsByTagName("input")[0].value
-    var cash = 'Cash'
-    
-    document.getElementById('make-payment').addEventListener('click', function(e){
-        submitFormData(cash)
-    })
-    
-    function submitFormData(method){
-        console.log('payment button clicked')
-        console.log('{{payment.amount}}')
-
-            var shippingId = window.shippingId
-        
-            var userFormData = {
-                'fname': null,
-                'lname': null,
-                'email': null,
-                'phone': null,
-                'total': total,
-                }
-
-        var url = 'process_order'
-        fetch(url,{
-            method: 'POST',
-            headers:{
-                'content-Type':'application/json',
-                'X-CSRFToken':csrftoken,
-            },
-            body:JSON.stringify({'form':userFormData, 'shipping': shippingId, 'method': method})  
-        })
-        .then((response) => response.json())
-        .then((data) =>{
-            if (data == 'payment complete'){
-                console.log('Success:', data);
-                cart = {}
-                document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
-                window.location.href = "{% url 'order_complete' %}"
-                }
-            else if (data == 'out of stock'){
-                cart = {}
-                document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
-                window.location.href = "{% url 'checkout' %}"
-                }
-            else if (data == 'not completed'){
-                cart = {}
-                document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
-                window.location.href = "{% url 'checkout' %}"
-                }
-            else {
-                cart = {}
-                document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
-                window.location.href = "{% url 'user_home' %}"
-            }   
-        }) 
-    }
-
-</script>
-
-<script>
     if ( window.history.replaceState ) {
         window.history.replaceState( null, null, window.location.href );
     }
-</script>
 
-
-<script>
     function selected(id){
         var coupon = document.getElementById(id).innerHTML
         document.getElementById('coupon').value = coupon
     }
-</script>
 
-<script>
     function coupon_remove(id){
         var id = id
         $.ajax({
@@ -426,12 +291,102 @@
             url : "coupon_delete",
             success: function(response){
                 document.getElementById('coupon').value = ''
-                location.reload()
+                $('#bag-dicount').addClass('d-none')
+                $('#bag-dicount2').addClass('d-none')
+                $('#coupon-message').html(response.label)
+                $('#coupon-message').removeClass('text-danger')
+                $('#coupon-message').addClass('text-success')
+                $('#coupon-remove').addClass('d-none') 
+                $('#total').html(response.total)
+                $('#balance').removeClass('d-none')
+                $('#wallet-balance').html(response.wallet)
+                $('#redeemed').addClass('d-none')
                 
             }
         });
     }
+
+    $(document).on("submit","#coupon-form",function(e){
+        e.preventDefault();
+        $.ajax({
+            type:"POST",
+            url:'coupon_apply',
+            data:{
+                code:$('#coupon').val(),
+                csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+            },
+            success: function(response){
+                if(response.message == "success"){
+                    console.log(response.message)
+                    $('#coupon').html(response.code)
+                    $('#total').html(response.total)
+                    $('#bag-dicount').removeClass('d-none')
+                    $('#order-offer').html(response.offer)
+                    $('#coupon-message').removeClass('text-danger')
+                    $('#coupon-message').addClass('text-success')         
+                    $('#coupon-message').html(response.label)
+                    $('#coupon-remove').removeClass('d-none')
+                    $('#coupon-remove2').addClass('d-none')
+                    $('#balance').removeClass('d-none')
+                    $('#wallet-balance').html(response.wallet)
+                    $('#redeemed').addClass('d-none')
+                    
+                }else{
+                    console.log(response.message)
+                    $('#coupon').html('')
+                    $('#coupon-message').addClass('text-danger')
+                    $('#coupon-message').removeClass('text-success')
+                    $('#coupon-message').html(response.label)
+
+                }
+                
+            }
+        })
+    })
+
+    $('#wallet-redeem').on("click", function(){
+        $.ajax({
+            type: "GET",
+            data: {
+            },
+            url : "redeem_wallet",
+            success: function(response){
+                $('#wallet-used').html(response.redeemed)
+                $('#total').html(response.total) 
+                $('#redeemed').removeClass('d-none') 
+                $('#balance').addClass('d-none') 
+            }
+        });
+    })
+
+    $('.wallet-remove').on("click", function(){
+        $.ajax({
+            type: "GET",
+            data: {
+            },
+            url : "remove_wallet",
+            success: function(response){
+                $('#balance').removeClass('d-none')
+                $('#wallet-balance').html(response.wallet)
+                $('#total').html(response.total) 
+                $('#redeemed').addClass('d-none') 
+            }
+        });
+    })
+
+    function submitAddress(id){
+        shippingId = id
+        $.ajax({
+            type: "GET",
+            data: {
+                shippingId: shippingId,
+            },
+            url : "order_address",
+            success: function(response){
+                console.log(response)
+            }
+        });
+    }
+
 </script>
-
-
-{% endblock content %}
+{% endblock %}

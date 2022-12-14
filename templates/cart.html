@@ -62,33 +62,58 @@
                                         <th class="product_total">Total</th>
                                     </tr>
                                 </thead> <!-- End Cart Table Head -->
-                                <tbody>
+                                <tbody id="cart-tbody">
                                     <!-- Start Cart Single Item-->
                                     {% for item in items %}
-                                    <tr>
-                                        {% if request.user.is_authenticated %}
-                                        <td class="product_remove"><a href="{% url 'cart_item_delete' item.id %}"><i class="fa fa-trash-o"></i></a>
-                                        {% else %}
-                                        <td class="product_remove"><a onclick="productRemove('{{item.product.id}}')" style="cursor: pointer;" class="fa fa-trash-o"></a>
-                                        {% endif %}
+                                    <tr class="selected-items">
+                                        <td class="product_remove">
+                                            {% if request.user.is_authenticated %}
+                                            <a id="{{item.id}}" class="link-delete" style="cursor: pointer;">
+                                            {% else %}
+                                            <a id="{{item.product.id}}" class="link-delete-guest" style="cursor: pointer;">
+                                            {% endif %}
+                                                <i class="fa fa-trash-o"></i></a>
                                         </td>
                                         <td class="product_thumb"><a href="{% url 'details' item.product.id %}"><img
                                                     src="{{ item.product.imageURL }}"
                                                     alt=""></a></td>
-                                        <td class="product_name"><a href="#">{{ item.product.name }}</a></td>
+                                        <td class="product_name"><a>{{ item.product.name }}</a></td>
                                         <td class="product-price">₹{{ item.product.price|floatformat:2 }}</td>
-                                        <td class="product_quantity">
+                                        {% if request.user.is_authenticated %}
+                                        <td >
                                             <div class="row">
                                             <div class="col-7" style="display: inline; text-align: end; padding-right: 0px;"><label>Quantity</label><span style="margin-left: 3px;">x</span>
-                                                <span style="font-weight: bold; font-size: 18px;">{{ item.quantity }}</span>
+                                                <span class="product_quantity" id="{{item.id}}-" style="font-weight: bold; font-size: 18px;">{{ item.quantity }}</span>
                                             </div>
                                             <div class="col-5" style="display: inline; text-align: start; ">
-                                                <img data-product={{item.product.id}} data-action="add" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-up.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
-                                                <img data-product={{item.product.id}} data-action="remove" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-down.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                                <img data-remove="#{{item.id}}-remove" data-id = "{{item.id}}-" data-total = "{{item.id}}--" data-product={{item.product.id}} data-action="add" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-up.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                                {% if item.quantity > 1 %}
+                                                <img id="{{item.id}}-remove" data-remove="#{{item.id}}-remove" data-id = "{{item.id}}-" data-total = "{{item.id}}--" data-product={{item.product.id}} data-action="remove" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-down.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                                {% else %}
+                                                <img id="{{item.id}}-remove" data-remove="#{{item.id}}-remove" data-id = "{{item.id}}-" data-total = "{{item.id}}--" data-product={{item.product.id}} data-action="remove" class="update-cart d-none" src="{% static 'user_home/assets/images/icons/arrow-down.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                                {% endif %}
                                             </div>
                                         </div>
                                         </td>
-                                        <td class="product_total">₹{{ item.get_total|floatformat:2 }}</td>
+                                        <td class="product_total" id="{{item.id}}--" >₹{{ item.get_total|floatformat:2 }}</td>
+                                        {% else %}
+                                        <td >
+                                            <div class="row">
+                                            <div class="col-7" style="display: inline; text-align: end; padding-right: 0px;"><label>Quantity</label><span style="margin-left: 3px;">x</span>
+                                                <span class="product_quantity" id="{{item.product.id}}-" style="font-weight: bold; font-size: 18px;">{{ item.quantity}}</span>
+                                            </div>
+                                            <div class="col-5" style="display: inline; text-align: start; ">
+                                                <img data-remove="#{{item.product.id}}-remove" data-id = "{{item.product.id}}-" data-total = "{{item.product.id}}--" data-product={{item.product.id}} data-action="add" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-up.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                                {% if item.quantity > 1 %}
+                                                <img id="{{item.product.id}}-remove" data-remove="#{{item.product.id}}-remove" data-id = "{{item.product.id}}-" data-total = "{{item.product.id}}--" data-product={{item.product.id}} data-action="remove" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-down.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                                {% else %}
+                                                <img id="{{item.product.id}}-remove" data-remove="#{{item.product.id}}-remove" data-id = "{{item.product.id}}-" data-total = "{{item.product.id}}--" data-product={{item.product.id}} data-action="remove" class="update-cart d-none" src="{% static 'user_home/assets/images/icons/arrow-down.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        </td>
+                                        <td class="product_total" id="{{item.product.id}}--" >₹{{ item.get_total|floatformat:2 }}</td>
+                                        {% endif %}
                                     </tr> 
                                     {% endfor %}
                                     <!-- End Cart Single Item-->
@@ -114,31 +139,16 @@
                         <div class="coupon_inner">
                             <div class="cart_subtotal">
                                 <p>Total Items</p>
-                                <p class="cart_amount">{{ order.get_cart_items }}</p>
+                                <p class="cart_amount" id="cart-items">{{ order.get_cart_items }}</p>
                             </div>
                             <div class="cart_subtotal">
                                 <p>Bag Total</p>
-                                <p class="cart_amount">₹{{ order.get_cart_total|floatformat:2 }}</p>
+                                <p class="cart_amount" id="bag-total">₹{{ order.get_cart_total|floatformat:2 }}</p>
                             </div>
-                            {% if order.order_coupon %}
-                            <div class="cart_subtotal">
-                                <p>Bag Discount</p>
-                                <p class="cart_amount">₹{{ order.offer|floatformat:2 }}</p>
-                            </div>   
-                            {% endif %}
-                            <!-- <div class="cart_subtotal ">
-                                <p>Shipping</p>
-                                <p class="cart_amount"><span>Flat Rate:</span> ₹255.00</p>
-                            </div>
-                            <a href="#">Calculate shipping</a> -->
                             <hr>
                             <div class="cart_subtotal">
                                 <p>Total</p>
-                                {% if order.order_coupon %}
-                                <p class="cart_amount">₹{{ order.total|floatformat:2 }}</p>
-                                {% else %}
-                                <p class="cart_amount">₹{{ order.get_cart_total|floatformat:2 }}</p>
-                                {% endif %}
+                                <p class="cart_amount" id="order-total">₹{{ order.get_cart_total|floatformat:2 }}</p>
                             </div>
                             <div class="checkout_btn">
                                 <a href="{% url 'checkout'%}" class="btn btn-md btn-golden">Proceed to Checkout</a>
@@ -148,20 +158,99 @@
                 </div>
             </div>
         </div>
-    </div> <!-- End Coupon Start -->
-</div> <!-- ...:::: End Cart Section:::... -->
+    </div> 
+</div> 
 {% endif %}
-
-
-<script>
-    function productRemove(productId){
-
-        delete cart[productId]
-        document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
-        location.reload()
-    
-    }
-</script>
-
-
 {% endblock content %}
+{% block js %}
+<script>
+    $(".link-delete").on("click", function(){
+        var $this = $(this);
+        swal({
+            title: "Are you sure?",
+            text: "This item will remove from your cart!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+          })
+          .then((willDelete) => {
+            if(willDelete){
+                swal("Item removed from the cart.",{
+                    icon: "success",
+                }).then(() => {
+                    $.ajax({
+                        type: "GET",
+                        data: {
+                            'id':$this.attr("id"),  
+                        },
+                
+                        url : "cart_item_delete",
+                        success: function(response){
+                            console.log($this) 
+                            if(response.message == "success"){
+                                $this.parents(".selected-items").remove();
+                                $(".item-count").html(response.cartItems);
+                                $("#cart-items").html(response.cartItems);
+                                $("#bag-total").html(response.bag_total);
+                                $("#order-total").html(response.total);    
+                            }else{
+
+                            }                                     
+                        }
+                    });
+                })
+            }else{
+                /* swal("Your imaginary file is safe!");*/
+            }
+          })
+    })
+
+    $(".link-delete-guest").on("click", function(){
+        var $this = $(this);
+        var productId = $this.attr("id");
+        swal({
+            title: "Are you sure?",
+            text: "This item will remove from your cart!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+          })
+          .then((willDelete) => {
+            if(willDelete){
+                swal("Item removed from the cart.",{
+                    icon: "success",
+                }).then(() => {
+                    delete cart[productId]
+                    document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
+                    $.ajax({
+                        type: "GET",
+                        data: {  
+                        },
+                        url : "delete_item_guest",
+                        success: function(response){
+                            console.log($this) 
+                            console.log(response.message)
+                            if(response.message == "success"){
+                                $this.parents(".selected-items").fadeOut("fast", function(){
+                                    $this.parents(".selected-items").remove();
+                                    $(".item-count").html(response.cartItems);
+                                    $("#cart-items").html(response.cartItems);
+                                    $("#bag-total").html(response.bag_total);
+                                    $("#order-total").html(response.total);
+                                    });
+                            }else{
+
+                            }
+                           
+                                                              
+                        }
+                    });
+                })
+            }else{
+                /* swal("Your imaginary file is safe!");*/
+            }
+          })
+
+    })
+</script>
+{% endblock %}

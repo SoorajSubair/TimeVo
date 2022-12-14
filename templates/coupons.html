@@ -1,0 +1,119 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12 main-datatable">
+      <div class="card_body">
+          <div class="row d-flex">
+          <div class="col-12  mt-3" style="text-align: center;">
+                  <h6 style="font-size: large;">COUPONS</h6>
+          </div> 
+      </div>
+          <div class="row d-flex">
+              <div class="col-4 createSegment"> 
+               <a class="btn dim_button create_new" href="{% url 'coupon_create' %}"> <span class="glyphicon glyphicon-plus"></span> Create New</a>
+              </div>
+              <div class="col-8 add_flex">
+                  <div class="form-group searchInput">
+                      <label for="email">Search:</label>
+                      <input type="search" class="form-control" id="filterbox9" placeholder=" ">
+                  </div>
+              </div> 
+          </div>
+          <!-- <div class="overflow-x"> -->
+              <div class="table-responsive">
+              <table  id="filtertable9" class="table  dataTable no-footer " style="color:#fff; text-align: center;" >
+                  <thead>
+                      <tr>
+                          <th style="min-width:50px;color: #fff;">ID</th>
+                          <th style="min-width:150px;">Code</th>
+                          <th style="min-width:150px;">Discount %</th>
+                          <th style="min-width:150px;">Minimum Purchase</th>
+                          <th style="min-width:150px;">Maximum Discount</th>
+                          <th style="min-width:150px;">Expiry</th>
+                          <th style="min-width:150px;">Status</th>
+                          <th style="min-width:150px;">Action</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                    {%  for coupon in coupons %}
+                          <tr>
+                              <td>{{ coupon.id }}</td>
+                              <td>{{ coupon.code }}</td>
+                              <td>{{ coupon.discount}} %</td>
+                              <td>₹ {{ coupon.minimum_amount}}</td>
+                              <td>₹ {{ coupon.maximum_discount}}</td>
+                              <td>{{ coupon.endDate}}</td>
+                                {% if coupon.is_active %}
+                                <td><span class="mode mode_on">Active</span></td>
+                                {% else %}
+                                <td><span class="mode mode_off">Blocked</span></td>
+                                {% endif %}
+                              <td>
+                                {% if coupon.is_active %}
+                                <a onclick=block_coupon(event) href="{% url 'coupon_block' coupon.id %}" type="button" class="btn btn-outline-danger btn-fw mt-2" style="line-height: 2;">Block</a>
+                                {% else %}
+                                <a onclick=unblock_coupon(event) href="{% url 'coupon_block' coupon.id %}" type="button" class="btn btn-outline-warning btn-fw mt-2" style="line-height: 2;">Unblock</a>
+                                {% endif %}
+                            </td>  
+                          </tr>  
+                      {% endfor %}      
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
+  </div>
+
+  <script>
+    function unblock_coupon(event) {
+        event.preventDefault();
+        var link = event.currentTarget.href;
+        swal.fire({
+          title: "Are you sure?",
+          text: "Once Unblocked, The coupon will be available for all users",
+          icon: "warning",
+          showConfirmButton: true,
+          confirmButtonText: 'Unblock',
+          showCancelButton: true,
+        })
+          .then((result) => {
+            if (result.isConfirmed) {
+              swal.fire(
+                "Coupon Unblocked!",
+                "success",
+              ).then(() => {
+                window.location = link;
+              });
+            } else {
+              /* swal("Your imaginary file is safe!");*/
+            }
+          });
+      }
+
+      function block_coupon(event) {
+        event.preventDefault();
+        var link = event.currentTarget.href;
+        swal.fire({
+          title: "Are you sure?",
+          text: "You want to block this coupon?",
+          icon: "question",
+          showConfirmButton: true,
+          confirmButtonText: 'Block',
+          showCancelButton: true,
+        })
+          .then((result) => {
+            if (result.isConfirmed) {
+              swal.fire(
+                "Coupon blocked!",
+                "success",
+              ).then(() => {
+                window.location = link;
+              });
+            } else {
+              /* swal("Your imaginary file is safe!");*/
+            }
+          });
+      }
+  </script>
+{% endblock %}

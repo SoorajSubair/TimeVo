@@ -46,11 +46,7 @@
                                 <td>{{ order.transaction_id }}</td>
                                 {% if order.get_cart_items > 0 %}
                                 <td>{{ order.get_cart_items }}</td>
-                                {% if order.order_coupon %}
-                                <td>₹{{ order.total|floatformat:2 }}</td>
-                                {% else %}
-                                <td>₹{{ order.get_cart_total|floatformat:2 }}</td>
-                                {% endif %}
+                                <td>₹{{ order.bill_total|floatformat:2 }}</td>
                                 {% else %}
                                 <td>{{ order.get_canceled_items }}</td>
                                 <td>₹{{ order.get_canceled_total|floatformat:2 }}</td>

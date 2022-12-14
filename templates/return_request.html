@@ -1,0 +1,104 @@
+{% extends 'admin_home.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12 main-datatable">
+      <div class="card_body">
+          <div class="row d-flex">
+          <div class="col-12  mt-3" style="text-align: center;">
+                  <h6 style="font-size: large;">RETURN REQUESTS</h6>
+          </div> 
+      </div>
+          <div class="row d-flex">
+              <div class="col-4 createSegment"> 
+               
+              </div>
+              <div class="col-8 add_flex">
+                  <div class="form-group searchInput">
+                      <label for="email">Search:</label>
+                      <input type="search" class="form-control" id="filterbox6" placeholder=" ">
+                  </div>
+              </div> 
+          </div>
+          <!-- <div class="overflow-x"> -->
+              <div class="table-responsive">
+              <table  id="filtertable6" class="table  dataTable no-footer " style="color:#fff; text-align: center;" >
+                  <thead>
+                      <tr>
+                          <th style="min-width:50px;color: #fff;">Order ID</th>
+                          <th style="min-width:150px;">Product</th>
+                          <th style="min-width:150px;">Reason</th>
+                          <th style="min-width:150px;">Action</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                    {%  for i in requests %}
+                          <tr class="selected-return">
+                              <td>{{ i.item.order_id }}</td>
+                              <td>{{ i.item.product.name }}</td>
+                              <td>{{ i.reason}}</td>
+                              <td>
+                                  <a data-r_id="{{i.id}}" data-p_id="{{i.item.product.id}}" data-o_id="{{i.item.order.id}}" data-user="{{i.user.id}}" class="btn btn-success approve" style="font-size: 1.2 rem; line-height: 2;">Approve</a>
+                              </td>
+                          </tr>  
+                      {% endfor %}      
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
+  </div>
+{% endblock %}
+{% block js %}
+<script>
+    $(".approve").on("click", function(e){
+        e.preventDefault();
+        var $this = $(this);
+        var p_id = this.dataset.p_id
+        var o_id = this.dataset.o_id
+        var user = this.dataset.user
+        var return_request = this.dataset.r_id
+       
+        swal.fire({
+            title: "Are you sure?",
+            text: "This request gets approved",
+            icon: "warning",
+            showConfirmButton: true,
+            confirmButtonText: 'Approve',
+            showCancelButton: true,
+          })
+            .then((result) => {
+              if (result.isConfirmed) {
+                swal.fire(
+                  "Success",
+                  "success",
+                ).then(() => {
+                    $.ajax({
+                        type: "GET",
+                        data: {
+                            p_id: p_id,
+                            o_id: o_id,
+                            user: user,
+                            id: return_request,  
+                        },
+                
+                        url : 'orderItem_return',
+                        success: function(response){
+                            console.log($this) 
+                            if(response.message == "success"){
+                                console.log("success")
+                                $this.parents(".selected-return").remove();
+                               
+                            }else{
+
+                            }                                     
+                        }
+                    });
+                });
+              } else {
+                /* swal("Your imaginary file is safe!");*/
+              }
+            });
+    })
+</script>
+{% endblock %}

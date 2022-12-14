@@ -29,7 +29,11 @@ urlpatterns = [
     path('c_offer_create', views.c_offer_create, name='c_offer_create'),
     path('c_offer_edit/<int:id>', views.c_offer_edit, name='c_offer_edit'),
     path('c_offer_delete/<int:id>', views.c_offer_delete, name='c_offer_delete'),
+    path('coupons', views.coupons, name='coupons'),
+    path('coupon_create', views.coupon_create, name='coupon_create'),
+    path('coupon_block/<int:id>', views.coupon_block, name='coupon_block'),
     path('sales_report', views.sales_report, name='sales_report'),
     path('cancel_sale_report', views.cancel_sale_report, name='cancel_sale_report'),
-
+    path('return_request', views.return_request, name='return_request'),
+    path('orderItem_return', views.orderItem_return, name='orderItem_return'),
 ]
