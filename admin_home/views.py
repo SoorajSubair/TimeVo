@@ -38,6 +38,9 @@ def administration_login(request):
 @never_cache
 def admin_home(request):
     if 'admin_username' in request.session:
+
+        name = request.session['admin_username']
+
         sales = []
         all_sales =SalesReport.objects.all().order_by('-date')[:7][::-1]
         for sale in all_sales:
@@ -50,7 +53,7 @@ def admin_home(request):
         cancel_items = CancelItem.objects.filter(status = 'Canceled').aggregate(Sum('quantity'))
         return_items = CancelItem.objects.filter(status = 'Returned').aggregate(Sum('quantity'))
             
-        context = {"sales": sales, "daily_amount": daily_amount, "total_revenue":total_revenue, "cancel_items":cancel_items,"return_items":return_items}
+        context = {"sales": sales, "daily_amount": daily_amount, "total_revenue":total_revenue, "cancel_items":cancel_items,"return_items":return_items, "name": name}
         return render(request,'admin_home.html', context)
 
     return redirect(administration_login)
