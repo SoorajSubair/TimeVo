@@ -48,18 +48,22 @@ function addCookieItem(productId, action,quantity, total, remove){
 
         url : "update_item_guest",
         success: function(response){
+            try {
+                document.getElementById(quantity).innerHTML = response.item_quantity
+                document.getElementById(total).innerHTML = response.item_total
+                if(response.item_quantity <= 1){
+                    $(remove).addClass('d-none');
+                }else{
+                    $(remove).removeClass('d-none');
+                }
+                }
+              catch(err) {
+                $(".alerts").delay("fast").slideDown().slideUp(1500);
+              }
             $(".item-count").html(response.cartItems);
             $("#cart-items").html(response.cartItems);
             $("#bag-total").html(response.bag_total);
             $("#order-total").html(response.total);
-            document.getElementById(quantity).innerHTML = response.item_quantity
-            document.getElementById(total).innerHTML = response.item_total
-            if(response.item_quantity <= 1){
-                $(remove).addClass('d-none');
-            }else{
-                $(remove).removeClass('d-none');
-            }
-         
         }
     });
 }
@@ -75,18 +79,24 @@ function updateUserOrder(productId, action, quantity, total, remove){
 
         url : "update_item",
         success: function(response){
-            
+            try {
+                document.getElementById(quantity).innerHTML = response.item_quantity
+                document.getElementById(total).innerHTML = response.item_total
+                if(response.item_quantity <= 1){
+                    $(remove).addClass('d-none');
+                }else{
+                    $(remove).removeClass('d-none');
+                }
+                }
+              catch(err) {
+                $(".alerts").delay("fast").slideDown().slideUp(1500);
+              }
             $(".item-count").html(response.cartItems);
             $("#cart-items").html(response.cartItems);
             $("#bag-total").html(response.bag_total);
             $("#order-total").html(response.total);
-            document.getElementById(quantity).innerHTML = response.item_quantity
-            document.getElementById(total).innerHTML = response.item_total
-            if(response.item_quantity <= 1){
-                $(remove).addClass('d-none');
-            }else{
-                $(remove).removeClass('d-none');
-            }
-        }
+            
+        },
+        
     });
 }
