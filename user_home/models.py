@@ -106,6 +106,11 @@ class Product(models.Model):
             url = ''
         return url
 
+    @property
+    def offer_percentage(self):
+        total = int(((self.price - self.offer_price)/((self.price + self.offer_price)/2))*100)
+        return total
+
 class ExtraImages(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     image = models.ImageField(null=True , blank=True)
