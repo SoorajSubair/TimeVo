@@ -103,7 +103,7 @@
                                                 <span class="product_quantity" id="{{item.product.id}}-" style="font-weight: bold; font-size: 18px;">{{ item.quantity}}</span>
                                             </div>
                                             <div class="col-5" style="display: inline; text-align: start; ">
-                                                <img data-remove="#{{item.product.id}}-remove" data-id = "{{item.product.id}}-" data-total = "{{item.product.id}}--" data-product={{item.product.id}} data-action="add" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-up.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
+                                                <img  data-remove="#{{item.product.id}}-remove" data-id = "{{item.product.id}}-" data-total = "{{item.product.id}}--" data-product={{item.product.id}} data-action="add" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-up.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
                                                 {% if item.quantity > 1 %}
                                                 <img id="{{item.product.id}}-remove" data-remove="#{{item.product.id}}-remove" data-id = "{{item.product.id}}-" data-total = "{{item.product.id}}--" data-product={{item.product.id}} data-action="remove" class="update-cart" src="{% static 'user_home/assets/images/icons/arrow-down.png' %}" alt="" style="height: 15px; width: 15px; display: block; cursor: pointer;">
                                                 {% else %}

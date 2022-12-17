@@ -388,7 +388,11 @@ def update_item(request):
     orderItem, created = OrderItem.objects.get_or_create(order = order, product = product)
 
     if action == 'add':
-        orderItem.quantity = (orderItem.quantity + 1)
+        if orderItem.quantity >= 5:
+            order_limit  = True
+        else:
+            order_limit  = False
+            orderItem.quantity = (orderItem.quantity + 1)
     elif action == 'remove':
         orderItem.quantity = (orderItem.quantity - 1)
 
@@ -402,7 +406,7 @@ def update_item(request):
     id = orderItem.pk
     bag_total = float(order.get_cart_total)+float(order.offer)+float(order.wallet_amount)
     
-    return JsonResponse({'cartItems': order.get_cart_items, 'total': order.get_cart_total, 'bag_total':'%.2f' % bag_total,"item_quantity":item_quantity,"item_total":item_total,"id":id}, safe=False)
+    return JsonResponse({'cartItems': order.get_cart_items, 'total': order.get_cart_total, 'bag_total':'%.2f' % bag_total,"item_quantity":item_quantity,"item_total":item_total,"id":id, "limit": order_limit}, safe=False)
 
 @never_cache
 def update_item_guest(request):
@@ -411,12 +415,13 @@ def update_item_guest(request):
     data = cartData(request)
     order = data['order']
     items = data['items']
+    order_limit = request.GET['limit']
     for item in items:
         if item['product']['id'] == id:
             item_quantity = item['quantity']
             item_total = item['get_total']
 
-    return JsonResponse({"message":"success", 'cartItems': order['get_cart_items'], 'total':order['get_cart_total'], 'bag_total':order['get_cart_total'],"item_quantity":item_quantity,"item_total":item_total}, safe=False)
+    return JsonResponse({"message":"success", 'cartItems': order['get_cart_items'], 'total':order['get_cart_total'], 'bag_total':order['get_cart_total'],"item_quantity":item_quantity,"item_total":item_total, "limit": order_limit}, safe=False)
 
 @never_cache
 def wishlist(request):

@@ -25,11 +25,17 @@ function addCookieItem(productId, action,quantity, total, remove){
 		cart[productId] = {'quantity':1}
 
 		}else{
+            if (cart[productId]['quantity'] >= 5){
+                var order_limit = true
+            }else{
+                var order_limit = false
 			cart[productId]['quantity'] += 1
+            }
 		}
 	}
 
     if (action == 'remove'){
+        var order_limit = false
 		cart[productId]['quantity'] -= 1
 
 		if (cart[productId]['quantity'] <= 0){
@@ -43,11 +49,14 @@ function addCookieItem(productId, action,quantity, total, remove){
     $.ajax({
         type: "GET",
         data: {
-            'id':productId
+            'id':productId,
+            'limit': order_limit
         },
 
         url : "update_item_guest",
         success: function(response){
+            
+            if(response.limit == 'false'){
             try {
                 document.getElementById(quantity).innerHTML = response.item_quantity
                 document.getElementById(total).innerHTML = response.item_total
@@ -64,6 +73,10 @@ function addCookieItem(productId, action,quantity, total, remove){
             $("#cart-items").html(response.cartItems);
             $("#bag-total").html(response.bag_total);
             $("#order-total").html(response.total);
+            }
+            else{
+                $(".limits").delay("fast").slideDown().slideUp(1500);
+            }
         }
     });
 }
@@ -79,6 +92,7 @@ function updateUserOrder(productId, action, quantity, total, remove){
 
         url : "update_item",
         success: function(response){
+            if(response.limit == false){
             try {
                 document.getElementById(quantity).innerHTML = response.item_quantity
                 document.getElementById(total).innerHTML = response.item_total
@@ -95,6 +109,10 @@ function updateUserOrder(productId, action, quantity, total, remove){
             $("#cart-items").html(response.cartItems);
             $("#bag-total").html(response.bag_total);
             $("#order-total").html(response.total);
+            }
+            else{
+                $(".limits").delay("fast").slideDown().slideUp(1500);  
+            }
             
         },
         
