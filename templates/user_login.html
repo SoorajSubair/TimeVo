@@ -1,11 +1,6 @@
 {% extends 'user_base.html' %}
 {% load static %}
 {% block content %}
-
-<div id="content-wrapper" class="d-flex flex-column">
-    {% include 'messages.html' %}
-</div>
-
 <div class="breadcrumb-section breadcrumb-bg-color--golden">
     <div class="breadcrumb-wrapper">
         <div class="container">
@@ -50,6 +45,9 @@
                                 <span>Remember me</span>
                             </label>
                             <a href="{% url 'user_register' %}">New User?REGISTER</a>
+                        </div>
+                        <div id="content-wrapper" class="d-flex flex-column">
+                            {% include 'messages.html' %}
                         </div>
                     </form>
                     <hr>

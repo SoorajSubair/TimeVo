@@ -394,6 +394,7 @@ def update_item(request):
             order_limit  = False
             orderItem.quantity = (orderItem.quantity + 1)
     elif action == 'remove':
+        order_limit  = False
         orderItem.quantity = (orderItem.quantity - 1)
 
     orderItem.save()
