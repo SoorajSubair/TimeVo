@@ -212,7 +212,7 @@ def list(request, id):
     filtering = request.GET.get('filtering', '')
     category = Category.objects.get(id = id)
     products = Product.objects.filter(category = category ).order_by('name')
-    filters = ["All","round","square","chain","leather"]
+    filters = ["All","round","square","chain","leather", "Price: less than 2000","Price: 2000 to 3000", "Price: above 3000"]
     sorts = ["Name: A to Z","Name: Z to A","Price: low to high","Price: high to low"]
     filtered = ''
     sorted = ''
@@ -239,6 +239,18 @@ def list(request, id):
 
     if filtering == 'chain' or filtering == 'leather':
         products = products.filter(strap = filtering)
+        filtered = filtering
+
+    if filtering == 'Price: less than 2000':
+        products = products.filter(price__range=(0, 2000))
+        filtered = filtering
+
+    if filtering == 'Price: 2000 to 3000':
+        products = products.filter(price__range=(2000, 3000))
+        filtered = filtering
+
+    if filtering == 'Price: above 3000':
+        products = products.filter(price__range=(3000, 7000 ))
         filtered = filtering
 
     if filtering == 'All':
