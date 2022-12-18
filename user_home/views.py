@@ -96,6 +96,7 @@ def user_otp(request):
 
     if request.method == 'POST':
         phone = request.POST['phone']
+        print(phone)
         user = CustomUser.objects.filter(phone = phone)
         if len(user) > 0:
             otp = random.randint(1000, 9999)
@@ -776,7 +777,10 @@ def user_account_update(request):
                 user.last_name = last_name
                 user.email = email 
                 user.phone = phone
-                user.image = image
+                try:
+                    user.image = image
+                except:
+                    pass
                 user.save()
                 messages.success(request,'Account details updated successfully!!')
                 return redirect(user_account)
