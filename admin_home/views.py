@@ -711,10 +711,9 @@ def sales_report(request):
     if 'monthfilter' in request.POST:
         sale_month_range = []
         start = request.POST.get("start-month",'')
-        end = request.POST.get("end-month",'')
         format = '%Y-%m'
         startmonth = datetime.datetime.strptime(start, format).date()
-        endmonth = datetime.datetime.strptime(end, format).date()
+        endmonth = datetime.datetime.strptime(start, format).date()
         try:
             try:
                 endmonth = endmonth.replace(day=31)
@@ -795,10 +794,9 @@ def cancel_sale_report(request):
     if 'monthfilter' in request.POST:
         sale_month_range = []
         start = request.POST.get("start-month",'')
-        end = request.POST.get("end-month",'')
         format = '%Y-%m'
         startmonth = datetime.datetime.strptime(start, format).date()
-        endmonth = datetime.datetime.strptime(end, format).date()
+        endmonth = datetime.datetime.strptime(start, format).date()
         try:
             try:
                 endmonth = endmonth.replace(day=31)

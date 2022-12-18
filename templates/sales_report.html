@@ -23,7 +23,7 @@
             <div class="col-12  mt-3" style="text-align: center;">
                     <h6 style="font-size: xx-large;">Sales Report</h6>
             </div> 
-            <div class="col-12 col-lg-3 mt-3 mb-3" style="text-align: center;">
+            <div class="col-12 col-lg-4 mt-3 mb-3" style="text-align: center;">
                 <h6 style="font-size: large;">Date Range</h6>
                 <form action="" method="post">
                 {% csrf_token %}
@@ -39,21 +39,18 @@
                 </form>
             </div>
             <div class="col-12 col-lg-4 mt-3 mb-3" style="text-align: center;">
-                <h6 style="font-size: large;">Month Range</h6>
+                <h6 style="font-size: large;">Month</h6>
                 <form action="" method="post">
                 {% csrf_token %}
                 <div class="mt-4">
-                <label  for="startmonth">From</label>
                 <input onchange="startmonth1(this.value)"  type="month" name="start-month" id="startmonth" class="text-dark" required>
-                <label  for="endmonth">to</label>
-                <input onchange="endmonth1(this.value)"  type="month" name="end-month" id="endmonth" class="text-dark" required>
                 </div>
                 <div>
                 <button name="monthfilter" class="mt-2" >submit</button>
                 </div>
                 </form>
             </div>
-            <div class="col-12 col-lg-2 mt-3 mb-3" style="text-align: center;">
+            <div class="col-12 col-lg-4 mt-3 mb-3" style="text-align: center;">
                 <h6 style="font-size: large;">Year</h6>
                 <form action="" method="post">
                 {% csrf_token %}
