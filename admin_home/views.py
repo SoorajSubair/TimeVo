@@ -101,53 +101,6 @@ def user_manage(request):
 
     return redirect(administration_login)
 
-
-@never_cache
-def create(request):
-    if 'admin_username' in request.session:
-        if request.method == 'POST':
-            reg_username = request.POST['reg_username']
-            first_name = request.POST['fname']
-            last_name = request.POST['lname']
-            reg_email = request.POST['reg_email']
-            phone = request.POST['phone']
-            password1 = request.POST['password1']
-            password2 = request.POST['password2']
-
-            if len(reg_username)<3:
-                messages.error(request,'Name must be atleast 3 characters')
-                return redirect(create)
-            if not reg_username.isalnum():
-                messages.error(request,'Username must contain only numbers and letters')
-                return redirect(create)    
-            if not first_name.isalpha():
-                messages.error(request,'First Name must contain only letters')
-                return redirect(create)
-            if not last_name.isalpha():
-                messages.error(request,'Last Name must contain only letters')
-                return redirect(create)
-            if password1 != password2:
-                messages.error(request,'Passwords does not match')
-                return redirect(create)
-            if CustomUser.objects.filter(username = reg_username).exists():
-                messages.error(request,'Already taken username')
-                return redirect(create)
-            if CustomUser.objects.filter(email = reg_email).exists():
-                messages.error(request,'Email already exists')
-                return redirect(create)
-            if CustomUser.objects.filter(phone = phone).exists():
-                messages.error(request,'Number already exists')
-                return redirect(create)
-            else:
-                user_details=CustomUser.objects.create_user(username=reg_username,email=reg_email,password=password1,first_name=first_name,last_name=last_name,phone=phone)    
-                user_details.save()             
-                messages.success(request,'Account created successfully!!')
-                return redirect(user_manage)
-        
-        return render(request, 'user_create.html')
-        
-    return redirect(administration_login)
-
 @never_cache
 def block(request, id):
     if 'admin_username' in request.session:

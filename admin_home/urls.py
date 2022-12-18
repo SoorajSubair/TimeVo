@@ -8,7 +8,6 @@ urlpatterns = [
     path('admin_logout', views.admin_logout, name='admin_logout'),
     path('user_manage', views.user_manage, name='user_manage'),
     path('block/<int:id>', views.block, name='block'),
-    path('create', views.create, name='create'),
     path('category_manage', views.category_manage, name='category_manage'),
     path('cat_create', views.cat_create, name='cat_create'),
     path('cat_update/<int:id>', views.cat_update, name='cat_update'),
