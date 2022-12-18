@@ -68,7 +68,7 @@
             </div>
         </div>
             <!-- <div class="overflow-x"> -->
-                <div class="table-responsive">
+                <div id="saletable" class="table-responsive">
                 <table  id="filtertable7" class="table  dataTable no-footer " style="color:#fff; text-align: center;" >
                     <thead>
                         <tr>
@@ -129,10 +129,44 @@
                 { extend: 'excel', className: 'btn-primary' },
                 { extend: 'pdf', className: 'btn-primary' },
                 { extend: 'print', className: 'btn-primary' },
+                {
+                    text: 'Document',
+                    className: 'btn-primary',
+                    action: function ( e, dt, node, config ) {
+                        export2Word(window.saletable);
+                    }
+                }
             ]
         } );
     } );
 </script>
+<script>
+    function export2Word( element ) {
+
+        var html, link, blob, url, css;
+        
+        css = (
+          '<style>' +
+          '@page WordSection1{size: 841.95pt 595.35pt;mso-page-orientation: landscape;}' +
+          'div.WordSection1 {page: WordSection1;}' +
+          '</style>'
+        );
+        
+        html = element.innerHTML;
+        blob = new Blob(['\ufeff', css + html], {
+          type: 'application/msword'
+        });
+        url = URL.createObjectURL(blob);
+        link = document.createElement('A');
+        link.href = url;
+        link.download = 'Document';  // default name without extension 
+        document.body.appendChild(link);
+        if (navigator.msSaveOrOpenBlob ) navigator.msSaveOrOpenBlob( blob, 'Document.doc'); // IE10-11
+            else link.click();  // other browsers
+        document.body.removeChild(link);
+      };
+</script>
+
 <script>
     if ( window.history.replaceState ) {
         window.history.replaceState( null, null, window.location.href );
@@ -147,18 +181,8 @@
     }
     var maxMonth = year + "-" + month;
     console.log(maxMonth)
-    document.getElementById("endmonth").setAttribute("max", maxMonth);
     document.getElementById("startmonth").setAttribute("max", maxMonth);
 
-    function startmonth1(startmonth){
-        document.getElementById("endmonth").setAttribute("min", startmonth);
-        console.log(startmonth)
-       }
-    
-       function endmonth1(endmonth){
-        document.getElementById("startmonth").setAttribute("max", endmonth);
-        end = endmonth
-       }
 
   </script>
 {% endblock %}
