@@ -23,6 +23,7 @@ function addCookieItem(productId, action,quantity, total, remove){
     if (action == 'add'){
 		if (cart[productId] == undefined){
 		cart[productId] = {'quantity':1}
+        var order_limit = false
 
 		}else{
             if (cart[productId]['quantity'] >= 5){
