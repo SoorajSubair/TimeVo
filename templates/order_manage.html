@@ -61,12 +61,29 @@
                                       </select> -->
                                       {% if order.status == 'Order Cancel' %}
                                       <span class="text-danger">canceled</span>
-                                      {% else %}
+                                      {% elif order.status == 'Delivered' %}
+                                      <span class="text-success">Delivered</span>
+                                      {% elif order.status == 'Order Received' %}
                                       <select onchange="status('{{order.id}}',this.value )" class="js-example-basic-single status" style="width:120%; color: white; font-size: large;">
-                                        {% for status in status %}
+                                        <option value="{{order.status}}"selected>{{order.status}}</option>
+                                        <option value="Shipped">Shipped</option>
+                                        <option value="Out for Delivery">Out for Delivery</option>
+                                        <option value="Delivered">Delivered</option>
+                                        <option value="Order Cancel">Order Cancel</option>
+                                      {% elif order.status == 'Shipped' %}
+                                      <select onchange="status('{{order.id}}',this.value )" class="js-example-basic-single status" style="width:120%; color: white; font-size: large;">
+                                        <option value="{{order.status}}"selected>{{order.status}}</option>
+                                        <option value="Out for Delivery">Out for Delivery</option>
+                                        <option value="Delivered">Delivered</option>
+                                      {% elif order.status == 'Out for Delivery' %}
+                                      <select onchange="status('{{order.id}}',this.value )" class="js-example-basic-single status" style="width:120%; color: white; font-size: large;">
+                                        <option value="{{order.status}}"selected>{{order.status}}</option>
+                                        <option value="Delivered">Delivered</option>
+                                      {% endif %}
+                                        <!-- {% for status in status %}
                                         <option value="{{ status }}"{% if status == order.status %}selected{% endif %}>{{ status }}</option>
-                                        {% endfor %}
-                                        {% endif %}
+                                        {% endfor %} -->
+                                        
                                       </select>
                                     </form>
                                 </td>
