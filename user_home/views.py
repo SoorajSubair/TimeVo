@@ -438,10 +438,6 @@ def update_item_guest(request):
     return JsonResponse({"message":"success", 'cartItems': order['get_cart_items'], 'total':order['get_cart_total'], 'bag_total':order['get_cart_total'],"item_quantity":item_quantity,"item_total":item_total, "limit": order_limit}, safe=False)
 
 @never_cache
-def wishlist(request):
-    return render(request, 'wishlist.html')
-
-@never_cache
 def checkout(request):
 
     if not request.user.is_authenticated:
