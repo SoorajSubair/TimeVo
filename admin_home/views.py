@@ -52,8 +52,13 @@ def admin_home(request):
         
         cancel_items = CancelItem.objects.filter(status = 'Canceled').aggregate(Sum('quantity'))
         return_items = CancelItem.objects.filter(status = 'Returned').aggregate(Sum('quantity'))
-            
-        context = {"sales": sales, "daily_amount": daily_amount, "total_revenue":total_revenue, "cancel_items":cancel_items,"return_items":return_items, "name": name}
+        order_items = OrderItem.objects.all().aggregate(Sum('quantity'))
+        men = Category.objects.get(name = 'MEN')
+        women = Category.objects.get(name = 'WOMEN')
+        men_products = Product.objects.filter(category_id = men.id).count()
+        women_products = Product.objects.filter(category_id = women.id).count()
+           
+        context = {"sales": sales, "daily_amount": daily_amount, "total_revenue":total_revenue, "cancel_items":cancel_items,"return_items":return_items,"order_items":order_items, "name": name,"men_products":men_products,"women_products":women_products}
         return render(request,'admin_home.html', context)
 
     return redirect(administration_login)
@@ -398,6 +403,7 @@ def order_view(request, id):
 def admin_orderItem_delete(request, p_id, o_id):
     if 'admin_username' in request.session:
         item = OrderItem.objects.get(order_id = o_id, product_id = p_id)
+        product = Product.objects.get(id = p_id)
         cancel_item, create = CancelItem.objects.get_or_create(order_id = o_id, product_id = p_id, status = 'Canceled')
         order = Order.objects.get(id = o_id)
         sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
@@ -852,6 +858,7 @@ def orderItem_return(request):
     o_id = request.GET['o_id']
     p_id = request.GET['p_id']
     item = OrderItem.objects.get(order_id = o_id, product_id = p_id)
+    product = Product.objects.get(id = p_id)
     cancel_item, create = CancelItem.objects.get_or_create(order_id = o_id, product_id = p_id, status = 'Returned')
     order = Order.objects.get(id = o_id)
     sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
