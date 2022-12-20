@@ -133,10 +133,18 @@ def cat_create(request):
     if 'admin_username' in request.session:
         if request.method == 'POST':
             name = request.POST['name']
-            category = Category.objects.create(name = name)
-            category.save()
-            messages.success(request,'category created successfully!!')
-            return redirect(category_manage)
+            categories = Category.objects.all()
+            for i in categories:
+                if name.lower() == i.name.lower():
+                    cat = True
+            if cat == True:
+                messages.error(request,'category already exists')
+                return redirect(cat_create)
+            else:
+                category = Category.objects.create(name = name)
+                category.save()
+                messages.success(request,'category created successfully!!')
+                return redirect(category_manage)
 
         return render(request, 'category_create.html')
 
@@ -147,12 +155,20 @@ def cat_update(request, id):
     if 'admin_username' in request.session:
         category = Category.objects.get(id = id)
         if request.method == 'POST':
-            category.name = request.POST['name']
-            category.save()
-            messages.success(request,'category updated successfully!!')
-            return redirect(category_manage)
+            name = request.POST['name']
+            categories = Category.objects.all()
+            for i in categories:
+                if name.lower() == i.name.lower():
+                    cat = True
+            if cat == True:
+                messages.error(request,'category already exists')
+                return redirect(cat_update,id)
+            else:
+                category.name = name
+                category.save()
+                messages.success(request,'category updated successfully!!')
+                return redirect(category_manage)
             
-
         context = {"category": category}
         return render(request, 'category_update.html', context)
 
@@ -403,7 +419,6 @@ def order_view(request, id):
 def admin_orderItem_delete(request, p_id, o_id):
     if 'admin_username' in request.session:
         item = OrderItem.objects.get(order_id = o_id, product_id = p_id)
-        product = Product.objects.get(id = p_id)
         cancel_item, create = CancelItem.objects.get_or_create(order_id = o_id, product_id = p_id, status = 'Canceled')
         order = Order.objects.get(id = o_id)
         sales, create = SalesReport.objects.get_or_create(date = order.date_ordered)
